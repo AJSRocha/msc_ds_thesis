@@ -1,0 +1,31 @@
+---
+title: "Untitled"
+author: "o povo e quem manda"
+date: '2022-09-21'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Enquadramento
+
+# Dados de base disponíveis
+
+* Vendas-dia
+
+* * Medida de Esforço: Paper da sílvia?
+
+* Logbooks (LPUE do OTB)
+
+* Campanhas (?)
+
+
+# Modelos a considerar
+
+## Metodologia de Box - Jenkins
+
+# Aconselhamento em tempo real
+
+# Deployment
