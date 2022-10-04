@@ -9,6 +9,13 @@ output: html_notebook
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(forecast)
+library(dplyr)
+library(ggplot2); library(ggfortify); library(gridExtra)
+```
+
+
 # Objectivo
 
 Este trabalho propõe-se a atingir 2 objectivos:
@@ -35,7 +42,7 @@ A avaliação de *stocks* de cefalópodes é alvo de [bastantes] trabalhos e no,
 
   * Medida de Esforço: Paper da sílvia?
 
-* **Logbooks** - Diários de bordo. Em teoria seriam de grande utilidade para estimação do esforço de pesca, mas a tipologia da frota que incide sobre OCC excluí a maioria das embarcações da obrigação legal de manter um diário de bordo. A sua utilidade seria, possivelmente como obtenção de um índice de abundância secundário, como por exemplo, kg/h de captura na frota de arrasto correspondente, de forma a contrastar com as séries temporais de desembarque que serão utilizadas.
+* **Logbooks** - Diários de bordo. Em teoria seriam de grande utilidade para estimação do esforço de pesca, mas a tipologia da frota que incide sobre OCC excluí a maioria das embarcações da obrigação legal de manter um diário de bordo. A sua utilidade seria, possivelmente como obtenção de um índice de abundância secundário, como por exemplo, kg/h de captura na frota de arrasto correspondente, de forma a contrastar com as séries temporais de desembarque que serão utilizadas. Não é de esperar que a série obtida seja adequada, será mais numa lógica de 'melhor que nada'.
 
 * **Campanhas** - Embora o IPMA realize várias campanhas de investigação que envolvem estimativas de abundância com base em capturas por unidade de esforço na costa portuguesa, a operacionalidade destas não é de todo adequada a cefalópodes devido aos aparelhos utilizados (arrasto pelágico e arrasto de fundo) e às profundidades em que incidem. As capturas de cefalópodes são consideradas incidentais e não-representativas da abundância dos mesmos. A utilização destes dados seria mais uma solução de último recurso, na linha dos *logbooks*.
 
@@ -51,29 +58,132 @@ A primeira abordagem seria a mais simples, conceptualmente: tentar modelar a sé
 load('data/initial_data_occ.Rdata')
 ```
 
-```{r}
-library(forecast)
-library(dplyr)
-
-ts_y = vd %>%
-  mutate(regiao = case_when(as.character(zona) %in%
+```{r, include = F}
+arranjador = function(df){
+  temp = df %>%
+    mutate(regiao = case_when(as.character(zona) %in%
                               c('27.9.a.c.n', ' 27.9.a.c.s') ~ 'Costa Ocidental',
                             as.character(zona) == '27.9.a.c.s' ~ 'Costa Sul',
-                            T ~ as.character(zona))) %>% 
+                            T ~ as.character(zona)),
+           dia = weekdays(IDATVEND),
+           semana = lubridate::week(IDATVEND),
+           semana_tot = paste(year_sale, semana %>% formatC(width = 2,
+                                                            format = 'd',
+                                                            flag = '0')),
+           fishing_season = case_when(month_sale %in% c('10','11','12') ~
+                                        as.numeric(as.character(year_sale)),
+                                      T ~ as.numeric(as.character(year_sale)) - 1) %>% factor)
+  return(temp)
+}
+```
+
+```{r}
+df = arranjador(vd)
+```
+
+```{r}
+ts_w_S = df %>%
+  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
+  filter(EGRUPART %in% c('MIS_MIS')) %>% 
+  group_by(semana_tot, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Sul') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = 1995, end= 2021, frequency = 52)
+
+ts_m_S = df %>%
+  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
+  filter(EGRUPART %in% c('MIS_MIS')) %>% 
+  group_by(year_sale, month_sale, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Sul') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = 1995, end= 2021, frequency = 12)
+
+ts_q_S = df %>%
+  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
+  filter(EGRUPART %in% c('MIS_MIS')) %>% 
+  group_by(year_sale, quarter_sale, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Sul') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = 1995, end= 2021, frequency = 4)
+
+ts_y_S = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
   filter(EGRUPART %in% c('MIS_MIS')) %>% 
   group_by(year_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA))
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Sul') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = 1995, end= 2021, frequency = 1)
 
-ts(ts_y %>%
-     filter(regiao == 'Costa Sul') %>%
-     ungroup() %>% 
-     select(QVENDA),
-   start = 1995, end= 2021, frequency = 1) %>% plot
+
+grid.arrange(
+autoplot(ts_w_S) + theme_classic() + labs(title = 'Semanal'),
+autoplot(ts_m_S) + theme_classic() + labs(title = 'Mensal'),
+autoplot(ts_q_S) + theme_classic() + labs(title = 'Trimestral'),
+autoplot(ts_y_S) + theme_classic() + labs(title = 'Anual'),
+ncol = 2)
 ```
 
+```{r}
+ts_w_W = df %>%
+  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
+  filter(EGRUPART %in% c('MIS_MIS')) %>% 
+  group_by(semana_tot, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Ocidental') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = 1995, end= 2021, frequency = 52)
+
+ts_m_W = df %>%
+  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
+  filter(EGRUPART %in% c('MIS_MIS')) %>% 
+  group_by(year_sale, month_sale, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Ocidental') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = 1995, end= 2021, frequency = 12)
+
+ts_q_W = df %>%
+  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
+  filter(EGRUPART %in% c('MIS_MIS')) %>% 
+  group_by(year_sale, quarter_sale, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Ocidental') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = 1995, end= 2021, frequency = 4)
+
+ts_y_W = df %>%
+  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
+  filter(EGRUPART %in% c('MIS_MIS')) %>% 
+  group_by(year_sale, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Ocidental') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = 1995, end= 2021, frequency = 1)
 
 
+grid.arrange(
+autoplot(ts_w_W) + theme_classic() + labs(title = 'Semanal'),
+autoplot(ts_m_W) + theme_classic() + labs(title = 'Mensal'),
+autoplot(ts_q_W) + theme_classic() + labs(title = 'Trimestral'),
+autoplot(ts_y_W) + theme_classic() + labs(title = 'Anual'),
+ncol = 2)
+```
+
+```{r}
+ts_q_S
+```
 
 ## CMSY+
 
