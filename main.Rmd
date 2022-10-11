@@ -28,7 +28,7 @@ Este trabalho propõe-se a atingir 2 objectivos:
 
 O polvo vulgar (*Octopus vulgaris*, código FAO: **OCC**) é uma das espécies com maior valor comercial para a frota de pesca local em Portugal. Embora ocorra como captura acessória de praticamente todas as artes de pesca, a esmagadora maioria dos desembarques de OCC resulta de pescarias dirigidas com recurso a armadilhas (nassas, covos, alcatruzes), praticadas por embarcações de pequenas dimensões que trabalham relativamente perto da costa. Esta pescaria é normalmente agrupada no segmento de pesca local e classificada como *Small-Scale Fishery* (SSF). Comum a estas pescarias é o valor comercial movimentado e a importância socio-económica para as comunidades de pescadores proporcionalmente elevada em relação ao número de profissionais que as praticam. Recentemente, a criação de um Comité de Gestão da Pesca de Polvo no Algarve reforçou a necessidade de dados e investigação sobre o estado do *stock*.
 
-A avaliação de *stocks* pesqueiros assenta na determinação de parâmetros biológicos e ecológicos tais como relações peso-comprimento, relações idade-comprimento, estrutura etária da população, idade/tamanho da primeira maturação, época de reprodução, *sex-ratio* da população, fluxos migratórios, entre outros. Estes parâmetros normalmente são estimados através de planos de amostragem mais ou menos directa que permitem estabelecer pontos de referência biológicos do *stock* como estimação de recrutamento anual, mortalidade natural e, por exemplo, rendimento máximo sustentável (*Maximum Sustainable Yield* - MSY), valores que por seu turno são usados para definir totais admissíveis de captura (TAC) ou correntemente, possibilidades de pesca.
+A avaliação de *stocks* pesqueiros assenta na determinação de parâmetros biológicos e ecológicos tais como relações peso-comprimento, relações idade-comprimento, estrutura etária da população, idade/tamanho da primeira maturação, época de reprodução, *sex-ratio* da população e fluxos migratórios, entre outros. Estes parâmetros normalmente são estimados através de planos de amostragem mais ou menos directa que permitem estabelecer pontos de referência biológicos do *stock* como estimação de recrutamento anual, mortalidade natural e, por exemplo, rendimento máximo sustentável (*Maximum Sustainable Yield* - MSY), valores que por seu turno são usados para definir totais admissíveis de captura (TAC) ou correntemente, possibilidades de pesca.
 
 Os modelos matemáticos usados tradicionalmente para estimação dos pontos de referência biológicos têm sido desenvolvidos com base em espécies de peixes ósseos e cartilagíneos. Embora exista nestes bastante variabilidade no que toca a premissas e assunções necessárias para a correcta aplicação dos modelos, as espécies de cefalópodes, classe em que OCC se insere, levantam uma série de obstáculos adicionais. Sistematicamente são espécies com crescimento corporal muito rápido e esperança de vida bastante curta (1-2 anos) e com um único evento de reprodução (semelparidade), factos que invalidam a aplicação indiscriminada de modelos com assumpções firmes sobre estrutura etária bem definida ou ciclidade dos períodos de desova. Empiricamente, as estimativas de biomassa tendem a sofrer variações mais acentuadas e com maior capacidade de recuperação do que seria de esperar em populações de peixes de dimensões comparáveis. Por este motivo, para cefalópodes não são definidos TAC, sendo apenas alvo de medidas precaucionárias. No caso do OCC existe um peso mínimo de 750 g.
 
@@ -81,6 +81,8 @@ arranjador = function(df){
 df = arranjador(vd)
 ```
 
+## Série de desembarques frota artesanal - Costa Sul:
+
 ```{r}
 ts_w_S = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
@@ -130,6 +132,8 @@ autoplot(ts_q_S) + theme_classic() + labs(title = 'Trimestral'),
 autoplot(ts_y_S) + theme_classic() + labs(title = 'Anual'),
 ncol = 2)
 ```
+
+## Série de desembarques frota artesanal - Costa Ocidental:
 
 ```{r}
 ts_w_W = df %>%
@@ -181,11 +185,10 @@ autoplot(ts_y_W) + theme_classic() + labs(title = 'Anual'),
 ncol = 2)
 ```
 
-```{r}
-ts_q_S
-```
-
 ## CMSY+
+
+
+
 
 ## SPiCT
 
