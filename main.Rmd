@@ -6,7 +6,7 @@ output: html_notebook
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = F, message = F, warning =F)
 ```
 
 ```{r}
@@ -40,7 +40,7 @@ A avaliação de *stocks* de cefalópodes é alvo de [bastantes] trabalhos e no,
 
   * Sabemos de antemão que o grupo de  artes de pesca onde mais de 90% das capturas de OCC ocorrem é o grupo das artes de pesca artesanais. A literatura sugere que em Portugal existem duas populações de OCC com dinâmicas distintas, divididas entre a costa ocidental e a costa sul. A segmentação do *dataset* provavelmente ocorrerá nestas linhas.
 
-  * Medida de Esforço: Paper da sílvia?
+  * Medida de Esforço: Existem algumas metodologias. para aproximação a uma medida de esforço adequada à pescaria de OCC. A mais básica será a contagem de dias de pesca, ou de viagens. Lourenço, S. et al propoem uma alternativa baseada na contagem do último dia de viagens consecutivas, de forma a garantir que cada viagem considerada corresponda a um dia de pesca, contornando assim o problema de muitas embarcações realizarem viagens que cobrem vários dias. A afinação desta métrica será algo a testar durante o trabalho.
 
 * **Logbooks** - Diários de bordo. Em teoria seriam de grande utilidade para estimação do esforço de pesca, mas a tipologia da frota que incide sobre OCC excluí a maioria das embarcações da obrigação legal de manter um diário de bordo. A sua utilidade seria, possivelmente como obtenção de um índice de abundância secundário, como por exemplo, kg/h de captura na frota de arrasto correspondente, de forma a contrastar com as séries temporais de desembarque que serão utilizadas. Não é de esperar que a série obtida seja adequada, será mais numa lógica de 'melhor que nada'.
 
@@ -48,11 +48,7 @@ A avaliação de *stocks* de cefalópodes é alvo de [bastantes] trabalhos e no,
 
 * **Dados ambientais** - Talvez seja oportuno considerar o uso deste tipo de dados em métodos que o permitam, como uma abordagem do tipo ARMAV (?). Trabalhos anteriores encontraram correlações fortes entre abundância de OCC e pluviosidade, por exemplo.
 
-# Modelos a considerar
-
-## Metodologia de Box - Jenkins
-
-A primeira abordagem seria a mais simples, conceptualmente: tentar modelar a série de desembarques como a série temporal que efectivamente é, tentando explicar o máximo de variância e evitando os pressupostos que levantam obstáculos nos modelos matemáticos seguintes.
+# Previsualização dos dados disponíveis
 
 ```{r, include = F}
 load('data/initial_data_occ.Rdata')
@@ -184,21 +180,95 @@ autoplot(ts_q_W) + theme_classic() + labs(title = 'Trimestral'),
 autoplot(ts_y_W) + theme_classic() + labs(title = 'Anual'),
 ncol = 2)
 ```
+# Modelos a considerar
 
-## CMSY+
+## Metodologia de Box - Jenkins
 
+A primeira abordagem seria a mais simples, conceptualmente: tentar modelar a série de desembarques como a série temporal que efectivamente é, tentando explicar o máximo de variância e evitando os pressupostos que levantam obstáculos nos modelos matemáticos seguintes. A abordagem inicial será de acordo com a metodologia que foi aprendida nas aulas de Séries Temporais e Previsão, entendendo que a análise poderá sempre ditar alternativas.
 
+## CMSY++
 
+Os modelos de produção utilizados em avaliação de stocks pesqueiros têm regra geral base na formulação de Fletcher (1978):
+
+$B_t = B_{t-1} + P_{t-1} - C_{t-1}$
+
+em que $B_t$ é a biomassa do stock no ano *t*, $P_t$ a produção de biomassa do stock e $C_t$ as capturas de pesca observadas para esse período.
+
+A produção pode ser descrita por
+
+$P_t = \gamma \times MSY \times (\frac{B_t}{K}-(\frac{B_t}{K})^n)$
+
+em que $K$ é a capacidade de carga do stock, $MSY$ o rendimento máximo sustentável, $n$ o parâmetro que controla a forma da curva de produção e
+
+$\gamma = \frac{1}{n-1} \times n^{\frac{n}{n-1}}$
+
+É também definida a mortalidade de pesca $F_t$, que pode ser aproximada por
+
+$\hat{F}_t = \frac{C_t}{\hat{B}_t}$
+
+Com base nesta formulação, é possível estimar o $MSY$ e a $F_{MSY}$ (mortalidade por pesca) correspondente. Para este trabalho propunha experimentar a implementação do *package* de R CMSY++, referenciada seguidamente.
+
+Referência: 
+https://www.researchgate.net/publication/352853417_User_Guide_for_CMSY
+
+https://openmse.com/features-assessment-models/3-sp/
 
 ## SPiCT
 
+SPiCT refere-se a *stochastic surplus production model in continuous time* e consiste numa abordagem que consiste em combinar a modelação da dinâmica do stock com a dinâmica da pescaria. Partindo da formulação descrita anteriormente, o modelo é implementado em tempo contínuo relacionando $B_t$ e $F_t$ com as observações $C_t$ e $I_t$ (respectivamente, desembarques e índice de abundância), incorporando uma componente estocástica. Para este trabalho, propõe-se a utilização do package *spict*, desenvolvido pelos autores. Esta implementação tem sido usada largamente no ICES para *data-poor* fisheriese e a sua viabilidade para o stock português de OCC já foi testada no âmbito do WGCEPH.
+
+Referência:
+https://onlinelibrary.wiley.com/doi/full/10.1111/faf.12174
+
 ## Modelos de Deplecção Generalizados
+
+Uma abordagem alternativa aos modelos de produção está a ser considerada para stocks de cefalópodes em geral e para o OCC em particular. Partindo do argumento que as abordagens anteriores dependem em demasia da estimativa de $MSY$ e que as características intrínsecas a cefalópodes desaconselham esta métrica, os autores propõem o recurso a um modelo de depleção na forma:
+
+$C_t = kE_t^\alpha \times N_t^\beta$
+
+em que $k$ é uma constante de proporcionalidade, $E$ o esforço de pesca, $N$ a abundância do stock, modulados pelos parâmetros $\alpha$ e $\beta$. A elaboração deste modelo permite incorporar pulsos de recrutamento e de migração que os autores consideram essenciais para uma melhor modelação do stock.
+
+Para este trabalho a modelação será feita com o package CatDyn, desenvolvida pelo autor do paper citado em baixo (Roa-Ureta)
+
+https://academic.oup.com/icesjms/article/78/6/2256/6299661
 
 # Aplicação Shiny
 
+Para além da tese, os resultados serão apresentados numa aplicação shiny. A estrutura proposta é:
+
+### Separador 1
+
+* Escolha da espécie a avaliar - nesta fase apenas OCC
+* Exibir algum texto que sirva de contexto para o utilizador:
+  * Informação básica da espécie e do stock;
+  * Metadados: intervalo de dados, fonte, etc;
+  
+### Separador 2 - Séries temporais:
+
+* Visualização da série
+* Visualização do forecast
+* Utilizador define:
+  * parametrização do modelo: pré-definido será o que na tese tiver sido encontrado como o melhor modelo, liberdade para tentar outras configurações;
+  * Nivel de agregação temporal dos dados - também pre-definida de acordo com o que foi constatado no trabalho.
+  
+### Separador 3 - CMSY++
+
+* Visualização da curva de produção
+* Visualização das estimativas dos pontos de referência biológicos
+* Utilizador define:
+  * valores para *priors* (pre-definidos de acordo com tese)
+
+### Separador 4 - SPiCT
+
+* Igual ao anterior, com adição de outputs graficos do SPiCT (plots de B/BMSY ~ F/FMSY)
+
+### Separador 5 - Modelo de deplecção
+
+* Semelhante aos 2 anteriores.
+
 # Deployment
 
-
+A um nível básico, para efeitos deste trabalho seria suficiente alojar a aplicação no site https://shinyapps.io. Idealmente, consoante o trabalho decorra e seja possível, seria interessante disponibilizar a aplicação num servidor através do recurso a um container como o *docker* e documentar o processo. Há algum interesse interno no IPMA em que este tipo de ferramenta seja estendido a outras espécies, pelo que seria interessante concebê-la já minimamente preparada para divulgação/produção. Sabendo como estes trabalhos decorrem, em termos de calendário, gostaria de não me comprometer muito com este ponto, embora seja um objectivo assumido deste trabalho.
 
 
 
