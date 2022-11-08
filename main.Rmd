@@ -32,7 +32,7 @@ A avaliação de *stocks* pesqueiros assenta na determinação de parâmetros bi
 
 Os modelos matemáticos usados tradicionalmente para estimação dos pontos de referência biológicos têm sido desenvolvidos com base em espécies de peixes ósseos e cartilagíneos. Embora exista nestes bastante variabilidade no que toca a premissas e assunções necessárias para a correcta aplicação dos modelos, as espécies de cefalópodes, classe em que OCC se insere, levantam uma série de obstáculos adicionais. Sistematicamente são espécies com crescimento corporal muito rápido e esperança de vida bastante curta (1-2 anos) e com um único evento de reprodução (semelparidade), factos que invalidam a aplicação indiscriminada de modelos com assumpções firmes sobre estrutura etária bem definida ou ciclidade dos períodos de desova. Empiricamente, as estimativas de biomassa tendem a sofrer variações mais acentuadas e com maior capacidade de recuperação do que seria de esperar em populações de peixes de dimensões comparáveis. Por este motivo, para cefalópodes não são definidos TAC, sendo apenas alvo de medidas precaucionárias. No caso do OCC existe um peso mínimo de 750 g.
 
-A avaliação de *stocks* de cefalópodes é alvo de [bastantes] trabalhos e no, âmbito do *International Council for Exploration of the Seas* (ICES), tem vindo a ser desenvolvida pelo *Working Group on Cephalopod Fisheries and Life History*, embora à data deste trabalho não exista ainda uma metodologia consensual para avaliação dos *stocks* abrangidos pelo ICES. Os modelos usados neste trabalho, foram, regra geral, testados em casos de estudos pelo WGCEPH. Este trabalho procura colocar em evidência o resultado destas metodologias no caso português, pôr em evidência as diferenças de *performance* das diferentes metodologias e pertinência para os nossos *stocks* e estabelecer um protótipo para uma ferramenta de gestão que possa contribuir para o acompanhamento e discussão da avaliação deste *stock*.
+A avaliação de *stocks* de cefalópodes é alvo de vários estudos e no, âmbito do *International Council for Exploration of the Seas* (ICES), tem vindo a ser desenvolvida pelo *Working Group on Cephalopod Fisheries and Life History*, embora à data deste trabalho não exista ainda uma metodologia consensual para avaliação dos *stocks* abrangidos pelo ICES. Os modelos usados neste trabalho, foram, regra geral, testados em casos de estudos pelo WGCEPH. Este trabalho procura colocar em evidência o resultado destas metodologias no caso português, pôr em evidência as diferenças de *performance* das diferentes metodologias e pertinência para os nossos *stocks* e estabelecer um protótipo para uma ferramenta de gestão que possa contribuir para o acompanhamento e discussão da avaliação deste *stock*.
 
 # Dados de base disponíveis
 
@@ -216,6 +216,34 @@ https://openmse.com/features-assessment-models/3-sp/
 ## SPiCT
 
 SPiCT refere-se a *stochastic surplus production model in continuous time* e consiste numa abordagem que consiste em combinar a modelação da dinâmica do stock com a dinâmica da pescaria. Partindo da formulação descrita anteriormente, o modelo é implementado em tempo contínuo relacionando $B_t$ e $F_t$ com as observações $C_t$ e $I_t$ (respectivamente, desembarques e índice de abundância), incorporando uma componente estocástica. Para este trabalho, propõe-se a utilização do package *spict*, desenvolvido pelos autores. Esta implementação tem sido usada largamente no ICES para *data-poor* fisheriese e a sua viabilidade para o stock português de OCC já foi testada no âmbito do WGCEPH.
+
+A Biomassa explorável no tempo $t$ ($B_t$) é modelada por:
+
+$$dB_t = rB_t(1 - {\left[ \frac{B_t}{K} \right] }^{n-1})dt - F_tB_tdt + \sigma_BB_tdW_t$$
+aonde
+
+$F_t$: mortalidade provocada por pesca no tempo $t$; $r$: taxa
+instantânea de mortalidade natural do *stock* - crescimento,
+recrutamento e mortalidade natural; $K$: Capacidade de carga do *stock*;
+$n$: Parâmetro que determina a forma da curva de produção (2 = modelo de
+Schaefer); $\sigma_B$: desvio-padrão de $B_t$; $W_t$: Movimento
+*browniano* (termo de ruído);
+
+A mortalidade por pesca $F_t$ por seu turno é modelada por:
+
+$$d\cdot log(F_t) = f(t,\sigma_F)$$ aonde $\sigma_F$ corresponde ao
+desvio-padrão de $F_t$.
+
+A equação associada às observações dos índices de abundância $I_t$é
+
+$$ log(I_t) = log(qB_t) + e_t,\; e_t \sim N(0,\left[ \alpha\sigma_B  \right]^2) $$
+em que $q$: capturabilidade e
+$\alpha = \frac{\sigma_{I_t}}{\sigma_{B_t}}$
+
+A equação associada às observações dos desembarques $C_t$ é
+
+$$log(C_t) = log(\int_{t}^{t+\Delta}F_sB_sds) \epsilon_t,\; \epsilon_t \sim N(0,\left[ \beta\sigma_F  \right]^2)$$
+em que $\alpha = \frac{\sigma_{C_t}}{\sigma_{F_t}}$
 
 Referência:
 https://onlinelibrary.wiley.com/doi/full/10.1111/faf.12174
