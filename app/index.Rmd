@@ -1,0 +1,199 @@
+---
+title: "Octopus trend simulator 3000"
+output: 
+  flexdashboard::flex_dashboard:
+    theme: lumen
+    # temas: default, cerulean, journal, flatly, darkly, readable, spacelab, 
+      # united, cosmo, lumen, paper, sandstone, simplex, yeti
+    orientation: rows
+    vertical_layout: fill
+    social: ["twitter", "facebook", "menu"]
+    name: 'IPMA'
+    source_code: embed
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard) #front-end
+library(knitr)
+library(DT)
+library(rpivotTable)
+library(ggplot2)
+library(gridExtra)
+library(plotly)
+library(dplyr)
+library(openintro)
+library(highcharter)
+library(ggvis)
+library(leaflet) #mapas
+library(sp)
+library(shiny) #interface c user
+library(zoo) #manipular datas
+library(dplyr)
+library(trend)
+
+# usado para box-jenkins
+library(forecast)
+library(astsa)
+```
+
+```{r load_data}
+load('data/box_jenkins.Rdata')
+```
+
+Metadata {data-icon="fa-home"}
+================================
+
+Quantidade {data-navmenu="Dados" data-icon="fa-balance-scale"}
+
+Row { data-height=20 }
+--------------------------------
+
+Devemos acrescentar 'runtime:shiny' para correr imediatamente a app; para fazer knit e produzir os html necessarios para o github pages, basta tirar essa linha.
+
+Row 
+--------------------------------
+
+### Portuguese Coast, 1995-2022
+```{r}
+valueBox(paste("Octopus Fisheries in Portugal"),
+         color="steelblue")
+```
+
+Row {data-width=325}
+--------------------------------
+
+### Grafico sexy
+
+```{r}
+renderPlot({
+p1 = grid.arrange(
+autoplot(ts_m_W ) + theme_classic() + labs(title = 'W - Monthly'),
+autoplot(ts_m_S ) + theme_classic() + labs(title = 'S - Monthly'),
+ncol = 1)
+p1
+})
+```
+
+```{r}
+
+# pal_1=c("steelblue","lightblue")
+# 
+# p1=plot_ly(data = df, x= ~PORTO, y=~QVENDA, type="bar",
+#            marker=list(color=pal_1)) %>%
+#   layout(xaxis=list(title="Embarcações"), 
+#          yaxis=list(title="Quilos"))
+# p1
+```
+
+### Boneco
+![](imgs/gc.jpg){ width=20% }
+
+SARIMA {data-icon="fa-home"}
+================================
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+```{r}
+selectInput('Region',
+            label = 'Region',
+            choices = c('Western Coast', 'Southern Coast'),
+            selected = 'Southern Coast')
+numericInput('S',
+            label = 'Frequency',
+            value = 12)
+numericInput('p',
+            label = 'Autoregressive order (p)',
+            value = 2)
+numericInput('q',
+            label = 'Moving Average order (q)',
+            value = 2)
+numericInput('d',
+            label = 'Differentiation (d)',
+            value = 0)
+numericInput('P',
+            label = 'Seasonal Autoregressive order (P)',
+            value = 0)
+numericInput('Q',
+            label = 'Seasonal Moving Average order (Q)',
+            value = 2)
+numericInput('D',
+            label = 'Seasonal Differentiation (D)',
+            value = 0)
+```
+
+Row {data-width=325}
+--------------------------------
+
+### ACF and pACF
+
+```{r}
+dados = reactive({
+   get(ifelse(input$Region == 'Southern Coast',
+                 'ts_m_S',
+                 'ts_m_W'))
+ })
+
+numericInput('maxlag',
+             label = 'Max Lag',
+             value = 48)
+
+numericInput('diff',
+             label = 'Differentiation',
+             value = 0)
+
+renderPlot({
+  # dados = get(ifelse(input$Region == 'Southern Coast',
+  #                'ts_m_S',
+  #                'ts_m_W'))
+  
+  if(input$diff != 0){
+    dados_acf = reactive({diff(dados(), input$diff)})
+  }
+  else{
+    dados_acf = reactive({dados()})
+  }
+  
+  astsa::acf2(dados_acf(), max.lag = input$maxlag)
+  
+})
+```
+
+### SARIMA
+
+```{r}
+numericInput('cutoff',
+             label = 'Test split',
+             value = 12)
+
+dts.train = reactive({head(dados(), (length(dados())-input$cutoff))})
+# dts.train = reactive({dados()[1:(length(dados())-input$cutoff)]})
+# dts.test = reactive({dados()[(length(dados())-input$cutoff+1):length(dados())]})
+# dts.test = reactive({tail(dados(), input$cutoff)})
+
+m1 = reactive({Arima(dts.train(), order = c(input$p,input$d,input$q),
+                     seasonal=list(order=c(input$P,input$D,input$Q),
+                                   period=input$S))})
+
+m1.f = reactive({forecast(m1(),
+                          h=input$cutoff)})
+
+renderPrint(m1())
+
+```
+
+Column {data-width=325}
+--------------------------------
+
+### Forecast
+
+```{r}
+renderPlot({
+par(mfrow = c(1,2))
+plot(m1.f(), xlim = c(2010,2022))
+plot(ts_m_S, col = 'red', xlim = c(2010,2022))
+
+})
+```
+

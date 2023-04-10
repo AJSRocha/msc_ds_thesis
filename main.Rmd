@@ -11,12 +11,13 @@ knitr::opts_chunk$set(echo = F, message = F, warning =F)
 
 ```{r}
 library(forecast)
-library(ggfortify); library(gridExtra)
+#library(ggfortify); library(gridExtra); #library(ggplotify)
 library(tidyverse)
 library(wesanderson)
 
+#atencao ao carregar o ggfortify e o ggplotify, eles sao incompativeis com os metodos de autoplot e autolayer
 
-library(CatDyn)
+#library(CatDyn)
 ```
 
 
@@ -79,6 +80,8 @@ arranjador = function(df){
 
 ```{r}
 df = arranjador(vd)
+
+# grava df no data 
 ```
 
 ## Série de desembarques frota artesanal - Costa Sul:
@@ -92,7 +95,7 @@ ts_w_S = df %>%
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2021, frequency = 52)
+  ts(start = 1995, end= 2022, frequency = 52)
 
 ts_m_S = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
@@ -102,7 +105,7 @@ ts_m_S = df %>%
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2021, frequency = 12)
+  ts(start = 1995, end= 2022, frequency = 12)
 
 ts_q_S = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
@@ -112,7 +115,7 @@ ts_q_S = df %>%
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2021, frequency = 4)
+  ts(start = 1995, end= 2022, frequency = 4)
 
 ts_y_S = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
@@ -122,7 +125,7 @@ ts_y_S = df %>%
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2021, frequency = 1)
+  ts(start = 1995, end= 2022, frequency = 1)
 
 
 grid.arrange(
@@ -144,7 +147,7 @@ ts_w_W = df %>%
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2021, frequency = 52)
+  ts(start = 1995, end= 2022, frequency = 52)
 
 ts_m_W = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
@@ -154,7 +157,7 @@ ts_m_W = df %>%
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2021, frequency = 12)
+  ts(start = 1995, end= 2022, frequency = 12)
 
 ts_q_W = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
@@ -164,7 +167,7 @@ ts_q_W = df %>%
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2021, frequency = 4)
+  ts(start = 1995, end= 2022, frequency = 4)
 
 ts_y_W = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
@@ -174,7 +177,7 @@ ts_y_W = df %>%
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2021, frequency = 1)
+  ts(start = 1995, end= 2022, frequency = 1)
 
 
 grid.arrange(
@@ -184,11 +187,104 @@ autoplot(ts_q_W) + theme_classic() + labs(title = 'Trimestral'),
 autoplot(ts_y_W) + theme_classic() + labs(title = 'Anual'),
 ncol = 2)
 ```
+
 # Modelos a considerar
 
 ## Metodologia de Box - Jenkins
 
 A primeira abordagem seria a mais simples, conceptualmente: tentar modelar a série de desembarques como a série temporal que efectivamente é, tentando explicar o máximo de variância e evitando os pressupostos que levantam obstáculos nos modelos matemáticos seguintes. A abordagem inicial será de acordo com a metodologia que foi aprendida nas aulas de Séries Temporais e Previsão, entendendo que a análise poderá sempre ditar alternativas.
+
+Proposta: Freqência mensal. Reflecte bem sazonalidade e reduz variabilidade intramensal.
+
+```{r}
+save(ts_m_S, ts_m_W,
+     file = 'app/data/box_jenkins.Rdata')
+```
+
+
+```{r}
+grid.arrange(
+autoplot(ts_m_W %>% diff) + theme_classic() + labs(title = 'W - Mensal'),
+autoplot(ts_m_S %>% diff) + theme_classic() + labs(title = 'S - Mensal'),
+ncol = 1)
+```
+
+### Desembarques S
+
+```{r}
+grid.arrange(
+autoplot(ts_m_S) + theme_classic() + labs(title = 'S - Mensal'),
+autoplot(ts_m_S %>% diff) + theme_classic() + labs(title = 'S - Mensal (diff(1)'),
+diff(ts_m_S, 1) %>% ggAcf(lag.max = 60),
+diff(ts_m_S, 12) %>% ggAcf(lag.max = 60),
+ncol=2)
+```
+
+
+
+```{r}
+BoxCox.lambda(ts_m_S)
+tseries::adf.test(ts_m_S, alternative='s') # pvalue = 0.01
+tseries::kpss.test(ts_m_S)
+```
+
+Necesssidade de diferenciar? Aparentemente não
+
+```{r}
+nsdiffs(ts_m_S)
+ndiffs(diff(ts_m_S,12))
+```
+#### Modelacao
+
+```{r}
+dts.train = window(ts_m_S, end=c(2020,12))
+dts.test=window(ts_m_S, start=c(2021,1), end=c(2021,12))
+
+auto.arima(dts.train) 
+# (2,0,2)x(0,0,2)_12
+```
+
+```{r}
+model1=astsa::sarima(dts.train,1,0,1,0,1,0,12); model1
+
+m1 = Arima(dts.train, order = c(2,0,2), seasonal=list(order=c(0,0,2), period=12))
+m1.f = forecast(m1,h=12)
+
+o1 = 
+
+
+gridExtra::grid.arrange(
+  autoplot(m1.f,
+         alpha = 1,
+         size = 0.5) +
+    labs(title = expression('SARIMA(2,0,2)*(0,0,2)'[12])) +
+    theme_light(),
+  autoplot(dts.train) +
+  autolayer(dts.test, color = 'red',
+          linetype = 'dashed') +
+  labs(title = 'Real Data') +
+  theme_light(),
+ncol=1)
+  
+
+
+autoplot(m1.f,
+         alpha = 1,
+         size = 0.5) +
+  # xlim(as.Date('01-01-2020', format = '%d-%m-%Y'),
+  #      as.Date('01-12-2020', format = '%d-%m-%Y')) +
+autolayer(dts.test, color = 'red',
+          linetype = 'dashed') +
+  labs(title = expression('SARIMA(2,0,2)*(0,0,2)'[12])) +
+  theme_light()
+
+
+```
+
+
+
+
+
 
 ## CMSY++
 
