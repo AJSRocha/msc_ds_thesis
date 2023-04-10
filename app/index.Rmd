@@ -168,9 +168,6 @@ numericInput('cutoff',
              value = 12)
 
 dts.train = reactive({head(dados(), (length(dados())-input$cutoff))})
-# dts.train = reactive({dados()[1:(length(dados())-input$cutoff)]})
-# dts.test = reactive({dados()[(length(dados())-input$cutoff+1):length(dados())]})
-# dts.test = reactive({tail(dados(), input$cutoff)})
 
 m1 = reactive({Arima(dts.train(), order = c(input$p,input$d,input$q),
                      seasonal=list(order=c(input$P,input$D,input$Q),
@@ -192,7 +189,7 @@ Column {data-width=325}
 renderPlot({
 par(mfrow = c(1,2))
 plot(m1.f(), xlim = c(2010,2022))
-plot(ts_m_S, col = 'red', xlim = c(2010,2022))
+plot(dados(), col = 'red', xlim = c(2010,2022))
 
 })
 ```
