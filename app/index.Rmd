@@ -35,16 +35,18 @@ library(trend)
 # usado para box-jenkins
 library(forecast)
 library(astsa)
+
+# usado para spict
+library(spict)
 ```
 
 ```{r load_data}
 load('data/box_jenkins.Rdata')
+load('data/spict.Rdata')
 ```
 
 Metadata {data-icon="fa-home"}
 ================================
-
-Quantidade {data-navmenu="Dados" data-icon="fa-balance-scale"}
 
 Row { data-height=20 }
 --------------------------------
@@ -123,25 +125,72 @@ numericInput('D',
             value = 0)
 ```
 
-Row {data-width=325}
---------------------------------
 
-### ACF and pACF
+Row
+-----------------------------------------------------------------------
+
+### Controls_1
+
+```{r}
+numericInput('maxlag',
+             label = 'Max Lag',
+             value = 48)
+```
+
+### Controls_2
+
+```{r}
+numericInput('diff',
+             label = 'Differentiation',
+             value = 0)
+```
+
+### Controls_3
+
+```{r}
+numericInput('cutoff',
+             label = 'Test split',
+             value = 12)
+```
+
 
 ```{r}
 dados = reactive({
    get(ifelse(input$Region == 'Southern Coast',
                  'ts_m_S',
                  'ts_m_W'))
- })
+  })
 
-numericInput('maxlag',
-             label = 'Max Lag',
-             value = 48)
+dts.train = reactive({head(dados(), (length(dados())-input$cutoff))})
 
-numericInput('diff',
-             label = 'Differentiation',
-             value = 0)
+m1 = reactive({Arima(dts.train(), order = c(input$p,input$d,input$q),
+                     seasonal=list(order=c(input$P,input$D,input$Q),
+                                   period=input$S))})
+
+m1.f = reactive({forecast(m1(),
+                          h=input$cutoff)})  
+  
+```
+
+### AIC
+
+```{r}
+renderValueBox({
+  aic =  m1()['aic']$aic %>% round(2)
+  valueBox(
+    value = aic,
+    icon = "fa-area-chart",
+    color = "primary"
+  )
+})
+```
+
+Column
+-----------------------------------------------------------------------
+
+### ACF and pACF
+
+```{r}
 
 renderPlot({
   # dados = get(ifelse(input$Region == 'Southern Coast',
@@ -163,34 +212,104 @@ renderPlot({
 ### SARIMA
 
 ```{r}
-numericInput('cutoff',
-             label = 'Test split',
-             value = 12)
-
-dts.train = reactive({head(dados(), (length(dados())-input$cutoff))})
-
-m1 = reactive({Arima(dts.train(), order = c(input$p,input$d,input$q),
-                     seasonal=list(order=c(input$P,input$D,input$Q),
-                                   period=input$S))})
-
-m1.f = reactive({forecast(m1(),
-                          h=input$cutoff)})
-
 renderPrint(m1())
-
 ```
 
-Column {data-width=325}
---------------------------------
+
+Row
+-----------------------------------------------------------------------
 
 ### Forecast
 
 ```{r}
 renderPlot({
 par(mfrow = c(1,2))
-plot(m1.f(), xlim = c(2010,2022))
 plot(dados(), col = 'red', xlim = c(2010,2022))
-
+plot(m1.f(), xlim = c(2010,2022))
 })
+```
+
+
+SPICT {data-icon="fa-home"}
+================================
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+```{r}
+selectInput('Region',
+            label = 'Region',
+            choices = c('Western Coast', 'Southern Coast'),
+            selected = 'Southern Coast')
+numericInput('logbkfrac',
+            label = 'Frequency',
+            value = 12)
+numericInput('logn',
+            label = 'Autoregressive order (p)',
+            value = 2)
+numericInput('logalpha',
+            label = 'Moving Average order (q)',
+            value = 2)
+numericInput('logbeta',
+            label = 'Differentiation (d)',
+            value = 0)
+```
+
+```{r}
+timeC = effort_ns$year_sale %>% as.character %>% as.numeric()
+timeI = effort_ns$year_sale %>% as.character %>% as.numeric()
+obsC = effort_ns$catch
+obsI = effort_ns$effort
+
+modelo_spict = list(timeC = timeC,
+                    timeI = timeC,
+                    obsC = obsC,
+                    obsI = obsI)
+
+modelo_spict$priors$logbkfrac <- c(log(0.8),0.5,1)
+modelo_spict$ini$logn <- log(2) #adjust production curve to Shaefer
+modelo_spict$phases$logn <- -1
+modelo_spict$priors$logalpha <- c(1, 1, 0)
+modelo_spict$priors$logbeta <- c(1, 1, 0)
+
+res_spict = fit.spict(modelo_spict)
+
+retro_res = retro(res_spict)
+```
+
+Row
+------------------------------------------------
+
+### Diagnostics
+
+```{r}
+plotspict.diagnostic(calc.osa.resid(res_spict))
+```
+
+### Biomass
+
+```{r}
+plotspict.biomass(res_spict)
+```
+
+
+Row
+------------------------------------------------
+
+### Painel
+
+```{r}
+par(mfrow = c(2,2))
+plotspict.bbmsy(res_spict)
+plotspict.ffmsy(res_spict)
+plotspict.fb(res_spict)
+plotspict.production(res_spict, n.plotyears = 40)
+```
+
+
+### Retro
+
+```{r}
+plotspict.retro(retro_res)
 ```
 

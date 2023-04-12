@@ -283,9 +283,6 @@ autolayer(dts.test, color = 'red',
 
 
 
-
-
-
 ## CMSY++
 
 Os modelos de produção utilizados em avaliação de stocks pesqueiros têm regra geral base na formulação de Fletcher (1978):
