@@ -11,7 +11,8 @@ knitr::opts_chunk$set(echo = F, message = F, warning =F)
 
 ```{r}
 library(forecast)
-#library(ggfortify); library(gridExtra); #library(ggplotify)
+#library(ggfortify); 
+library(gridExtra); #library(ggplotify)
 library(tidyverse)
 library(wesanderson)
 
@@ -95,7 +96,7 @@ ts_w_S = df %>%
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2022, frequency = 52)
+  ts(start = 1995, end= 2023, frequency = 52)
 
 ts_m_S = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
@@ -105,7 +106,7 @@ ts_m_S = df %>%
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2022, frequency = 12)
+  ts(start = 1995, end= 2023, frequency = 12)
 
 ts_q_S = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
@@ -115,7 +116,7 @@ ts_q_S = df %>%
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2022, frequency = 4)
+  ts(start = 1995, end= 2023, frequency = 4)
 
 ts_y_S = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
@@ -125,7 +126,17 @@ ts_y_S = df %>%
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2022, frequency = 1)
+  ts(start = 1995, end= 2023, frequency = 1)
+
+ts_fs_S = df %>%
+  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
+  filter(EGRUPART %in% c('MIS_MIS')) %>% 
+  group_by(fishing_season, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Sul') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = 1994, end= 2023, frequency = 1)
 
 
 grid.arrange(
@@ -147,7 +158,7 @@ ts_w_W = df %>%
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2022, frequency = 52)
+  ts(start = 1995, end= 2023, frequency = 52)
 
 ts_m_W = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
@@ -157,7 +168,7 @@ ts_m_W = df %>%
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2022, frequency = 12)
+  ts(start = 1995, end= 2023, frequency = 12)
 
 ts_q_W = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
@@ -167,7 +178,7 @@ ts_q_W = df %>%
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2022, frequency = 4)
+  ts(start = 1995, end= 2023, frequency = 4)
 
 ts_y_W = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
@@ -177,7 +188,17 @@ ts_y_W = df %>%
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1995, end= 2022, frequency = 1)
+  ts(start = 1995, end= 2023, frequency = 1)
+
+ts_fs_W = df %>%
+  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
+  filter(EGRUPART %in% c('MIS_MIS')) %>% 
+  group_by(fishing_season, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Ocidental') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = 1994, end= 2023, frequency = 1)
 
 
 grid.arrange(
@@ -198,6 +219,10 @@ Proposta: Freqência mensal. Reflecte bem sazonalidade e reduz variabilidade int
 
 ```{r}
 save(ts_m_S, ts_m_W,
+     ts_fs_S, ts_fs_W,
+     ts_y_S, ts_y_W,
+     ts_q_S, ts_q_W,
+     ts_w_S, ts_w_W,
      file = 'app/data/box_jenkins.Rdata')
 ```
 
