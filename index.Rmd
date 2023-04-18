@@ -41,8 +41,8 @@ library(spict)
 ```
 
 ```{r load_data}
-load('app_data/box_jenkins.Rdata')
-load('app_data/spict.Rdata')
+load('./app_data/box_jenkins.Rdata')
+load('./app_data/spict.Rdata')
 
 #Devemos acrescentar 'runtime:shiny' para correr imediatamente a app; para fazer knit e produzir os html necessarios para o github pages, basta tirar essa linha.
 ```
