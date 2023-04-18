@@ -10,7 +10,7 @@ output:
     social: ["twitter", "facebook", "menu"]
     name: 'IPMA'
     source_code: embed
-runtime: shiny
+#runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
@@ -132,13 +132,13 @@ Column {.sidebar}
 -----------------------------------------------------------------------
 
 ```{r}
-selectInput('Region_2"',
+selectInput('Region_2',
             label = 'Region',
             choices = c('Western Coast', 'Southern Coast'),
             selected = 'Southern Coast')
 selectInput('Frequency_2',
             label = 'Time Frequency',
-            choices = c('Weeks',' Months', 'Quarters', 'Years','Fishing Season'),
+            choices = c('Weeks','Months', 'Quarters', 'Years','Fishing Season'),
             selected = 'Months')
 # numericInput('S',
 #             label = 'Frequency',
@@ -231,7 +231,7 @@ dts.train = reactive({head(dados_2(), (length(dados_2())-input$cutoff))})
 
 m1 = reactive({Arima(dts.train(), order = c(input$p,input$d,input$q),
                      seasonal=list(order=c(input$P,input$D,input$Q),
-                                   period=Freq_2()))})
+                                   period=as.numeric(Freq_2())))})
 
 m1.f = reactive({forecast(m1(),
                           h=input$cutoff)})  
@@ -254,7 +254,7 @@ renderValueBox({
 ### Apagar
 
 ```{r}
-renderText(dados_2())
+renderText(input$Region_2)
 ```
 
 Column
