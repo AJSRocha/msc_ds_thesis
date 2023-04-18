@@ -24,8 +24,8 @@ window.FlexDashboardComponents = [];
 <script id="flexdashboard-navbar" type="application/json">
 [{"icon":"fa-twitter"},{"icon":"fa-facebook"},{"icon":"fa-share-alt","items":[{"title":"Twitter","icon":"fa-twitter"},{"title":"Facebook","icon":"fa-facebook"},{"title":"Google+","icon":"fa-google-plus"},{"title":"LinkedIn","icon":"fa-linkedin"},{"title":"Pinterest","icon":"fa-pinterest"}]},{"title":"Source Code","icon":"fa-code","href":"source_embed","align":"right"}]
 </script>
-<script src="site_libs/header-attrs-2.10/header-attrs.js"></script>
-<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/lumen.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
@@ -2678,7 +2678,7 @@ window.FlexDashboardComponents.push({
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
-<span class="value-output" data-color="steelblue">Octopus Fisheries in Portugal</span>
+<p><span class="value-output" data-color="steelblue">Octopus Fisheries in Portugal</span></p>
 </div>
 </div>
 <div id="row-1" class="section level2" data-width="325">
@@ -2688,7 +2688,7 @@ window.FlexDashboardComponents.push({
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
-<div id="out5b3c06f4e3335793" class="shiny-plot-output" style="width:100%;height:400px;"></div>
+<p><div id="out34bf48027a35afe3" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
@@ -2790,14 +2790,14 @@ window.FlexDashboardComponents.push({
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
-<div class="shiny-html-output shiny-html-output shiny-valuebox-output" height="160px" id="out154b1b52492fc77b" width="100%"></div>
+<p><div class="shiny-html-output shiny-html-output shiny-valuebox-output" height="160px" id="oute2bccbc020dae281" width="100%"></div></p>
 </div>
 <div id="apagar" class="section level3">
 <h3>Apagar</h3>
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
-<div id="outbfd90a793c682181" class="shiny-text-output"></div>
+<p><div id="out12b762fb40742855" class="shiny-text-output"></div></p>
 </div>
 </div>
 <div id="column-2" class="section level2">
@@ -2807,14 +2807,14 @@ window.FlexDashboardComponents.push({
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
-<div id="out5a94c758de56c87d" class="shiny-plot-output" style="width:100%;height:400px;"></div>
+<p><div id="outd599bf3437b2ec1a" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 </div>
 <div id="sarima-1" class="section level3">
 <h3>SARIMA</h3>
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
-<pre class="shiny-text-output noplaceholder" id="out69230e03b59ce045"></pre>
+<p><pre class="shiny-text-output noplaceholder" id="out7c4266944491478d"></pre></p>
 </div>
 </div>
 <div id="row-3" class="section level2">
@@ -2824,7 +2824,7 @@ window.FlexDashboardComponents.push({
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
-<div id="out750f7842e3c8d39c" class="shiny-plot-output" style="width:100%;height:400px;"></div>
+<p><div id="outc6eea403a1cd77eb" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 </div>
 </div>
 </div>
@@ -2957,8 +2957,8 @@ library(spict)
 ```
 
 ```{r load_data}
-load('app_data/box_jenkins.Rdata')
-load('app_data/spict.Rdata')
+load('./app_data/box_jenkins.Rdata')
+load('./app_data/spict.Rdata')
 
 #Devemos acrescentar 'runtime:shiny' para correr imediatamente a app; para fazer knit e produzir os html necessarios para o github pages, basta tirar essa linha.
 ```
