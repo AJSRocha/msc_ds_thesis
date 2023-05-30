@@ -204,20 +204,22 @@ ts_fs_W = df %>%
 ```
 
 ```{r}
-ts_w__FS_S = df %>%
+ts_w_FS_S = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
   filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(semana, fishing_season, regiao) %>% 
+  group_by(semana_fs, fishing_season, regiao) %>% 
   summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>% View
+  filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = 1994, end= 2023, frequency = 53)
+  ts(start = c(1994, 14), end= c(2021,14), frequency = 53)
+
+autoplot(ts_w_FS_S) + theme_classic() + labs(title = 'Weekly Fishing Seasons')
 
 ts_w_FS_W = df %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
   filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(semana, fishing_season, regiao) %>% 
+  group_by(semana_fs, fishing_season, regiao) %>% 
   summarise(QVENDA = sum(QVENDA)) %>% 
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
@@ -229,6 +231,8 @@ ts_w_FS_W = df %>%
 ## Dados Biologicos
 
 186 One important shortcoming of the data was that the biological sampling of mean weight 187 did not occur in all weeks of the 19 seasons and yet individual weight data are necessary 188 to transform from catch in weight to catch in numbers in all weeks (Supplementary Table 189 SM1). As in previous cases with missing biological sampling (Roa-Ureta, 2015; Roa-Ureta 190 et al., 2019, 2020) the missing mean individual weight was replaced with predictions from 191 an accessory model fit with the available data. First, we fitted a simple model of mean 192 weight change through the weeks of the year with a cubic spline smoother, function 193 loess in R 3.6.1 (R Core Team, 2019). Little inter-annual variability was observed in 194 the seasonal pattern of the mean individual weight (Fig. 2) and this pattern was similar 195 to results presented in Fern ́andez-Rueda and Garc ́ıa-Fl ́ orez (2007). Thus we used the 196 pooled data from all 19 seasons to estimate the weekly mean weight model (n=275). 197 In the fit of this accessory model we created a predictor variable spanning the range of 198 week numbers in a year (1 to 53), then we used the data to fit the smoother with a span 199 parameter equal to 1 (equivalent to using the data from all weeks to predict the model 200 at each week), and finally to predict the expected mean weight and its standard error for 201 all weeks within a season (Supplementary Fig. SM2). Secondly, we predicted the mean 202 weight for each week in each season from a truncated normal distribution defined by the 203 predicted weekly mean weight ± 2 standard errors using R package Runuran (Leydold 204 and H ̈ ormann, 2019) (Supplementary Fig. SM2). In this manner we obtained a complete 205 vector of mean weight matching the catch and effort data while introducing noise due to 206 sampling variation in the biological data.
+
+
 
 ## Outputs
 
@@ -242,9 +246,6 @@ save(ts_m_S, ts_m_W,
      ts_w_S, ts_w_W,
      file = 'app/data/box_jenkins.Rdata')
 ```
-
-
-
 
 # Indices de esforço
 
@@ -273,6 +274,9 @@ data collection by each fishing season:
 -	biological samples to provide data of mean individual weight in the catch to transform catch in weight to catch in numbers. 
 -	raw data were aggregated into weekly time-steps to fit intra-annual generalized depletion models to each season’s data. 
 
+```{r}
+
+```
 
 
 
