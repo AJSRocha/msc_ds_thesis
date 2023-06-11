@@ -288,7 +288,6 @@ ts_fs_W = df %>%
 186 One important shortcoming of the data was that the biological sampling of mean weight 187 did not occur in all weeks of the 19 seasons and yet individual weight data are necessary 188 to transform from catch in weight to catch in numbers in all weeks (Supplementary Table 189 SM1). As in previous cases with missing biological sampling (Roa-Ureta, 2015; Roa-Ureta 190 et al., 2019, 2020) the missing mean individual weight was replaced with predictions from 191 an accessory model fit with the available data. First, we fitted a simple model of mean 192 weight change through the weeks of the year with a cubic spline smoother, function 193 loess in R 3.6.1 (R Core Team, 2019). Little inter-annual variability was observed in 194 the seasonal pattern of the mean individual weight (Fig. 2) and this pattern was similar 195 to results presented in Fern ́andez-Rueda and Garc ́ıa-Fl ́ orez (2007). Thus we used the 196 pooled data from all 19 seasons to estimate the weekly mean weight model (n=275). 197 In the fit of this accessory model we created a predictor variable spanning the range of 198 week numbers in a year (1 to 53), then we used the data to fit the smoother with a span 199 parameter equal to 1 (equivalent to using the data from all weeks to predict the model 200 at each week), and finally to predict the expected mean weight and its standard error for 201 all weeks within a season (Supplementary Fig. SM2). Secondly, we predicted the mean 202 weight for each week in each season from a truncated normal distribution defined by the 203 predicted weekly mean weight ± 2 standard errors using R package Runuran (Leydold 204 and H ̈ ormann, 2019) (Supplementary Fig. SM2). In this manner we obtained a complete 205 vector of mean weight matching the catch and effort data while introducing noise due to 206 sampling variation in the biological data.
 
 ```{r}
-load('data/nautilus_occ.Rdata')
 
 semanador_fs_bio = function(x){
   mod = ifelse(as.numeric(as.character(x$ano)) == as.numeric(as.character(x$fishing_season)),
@@ -309,24 +308,107 @@ arranjador_bio = function(df){
           
           fishing_season = case_when(trim %in% c('4') ~
                                        as.numeric(as.character(ano)),
-                                       T ~ as.numeric(as.character(ano)) - 1) %>% factor)
+                                       T ~ as.numeric(as.character(ano)) - 1))
   return(temp)
 }
 
-temp =
+# dados 1997 - 2016
+bio_sic = read.csv('data/occ_20092016_cmp.csv')
+
+bio_xxx = bio_sic %>% 
+  mutate(ano = substr(DATA_AM, 7, 10),
+         data_venda = as.POSIXct(DATA_AM, format = '%d-%m-%Y'),
+         id_caixa = ID_AMOSTRA,
+         regiao = case_when(REGIAO == 'S' ~ 'Costa Sul',
+                            T ~ 'Costa Ocidental'),
+         fishing_season = case_when(substr(DATA_AM, 4,5) %in%
+                                      c('10', '11', '12') ~ as.numeric(ano),
+                                    T ~ as.numeric(ano) - 1)) %>% 
+  group_by(ano, data_venda, regiao, fishing_season, CAT, id_caixa) %>% 
+  summarise(peso_am= unique(PESO_A_C) * 1000,
+            n_am = unique(N_IND),
+            mean_weight = peso_am/n_am)
+
+bio_xxx$semana_fs = semanador_fs_bio(bio_xxx)
+bio_xxx = bio_xxx %>% 
+  ungroup() %>% 
+  select(id_caixa, fishing_season, semana_fs, regiao, peso_am, n_am, mean_weight)
+
+# bio_xxx = bio_xxx %>% 
+#   group_by(ano, regiao, fishing_season, semana_fs) %>% 
+#   summarise(peso_am = sum(peso_am),
+#             n_am = sum(n_am),
+#             mean_weight = peso_am/n_am)
+
+load('data/nautilus_occ.Rdata')
+
+bio_naut =
   arranjador_bio(bio_occ) %>%
   mutate(semana_fs = semanador_fs_bio(.)) %>% 
-  filter(fishing_season == '2021') %>% 
-  filter(regiao == 'Costa Sul')
-
-temp %>% 
+  # filter(fishing_season == '2021') %>% 
+  # filter(regiao == 'Costa Sul') %>% 
   filter(estrategia_amostragem == 'Concurrent Sampling') %>% 
-  group_by(id_caixa, fishing_season, semana_fs) %>% 
+  group_by(id_caixa, fishing_season, semana_fs, regiao) %>% 
   summarise(peso_am = sum(peso_total),
             n_am = length(peso_total),
-            mean_weight = peso_am/n_am) %>% View
-  
+            mean_weight = peso_am/n_am)
 
+bio = rbind(bio_xxx, bio_naut)
+temp = bio %>% filter (fishing_season %in% c(2008:2022)) %>% 
+  filter(mean_weight < 6000 & mean_weight > 100) %>% 
+  mutate(fishing_season = factor(fishing_season))
+
+
+# modelar peso medio
+
+media = 
+temp %>% group_by(semana_fs, regiao) %>% 
+  summarise(avg_w = mean(mean_weight, na.rm = T),
+            sd_w = sd(mean_weight, na.rm = T))
+
+temp %>% 
+  ggplot() + 
+  geom_point(aes(x = semana_fs,
+                 y = mean_weight,
+                 color = fishing_season)) + 
+  geom_line(aes(x = media$semana_fs,
+                y = media$avg_w,
+                group = media$regiao))
+
+media %>% 
+  ggplot() + 
+   geom_line(aes(x = media$semana_fs,
+                y = media$avg_w,
+                group = media$regiao,
+                color = media$regiao)) + 
+     geom_line(aes(x = media$semana_fs,
+                y = media$avg_w + sd_w,
+                group = media$regiao,
+                color = media$regiao))
+
+
+mw_glm = glm(mean_weight ~ semana_fs + regiao,
+             data = temp,
+             family = 'gaussian')
+
+temp$pred = predict(mw_glm, temp)
+
+temp %>% 
+  ggplot() + 
+  geom_point(aes(x = semana_fs,
+                y = pred,
+                group = regiao,
+                color = regiao))
+
+temp %>% 
+  ggplot() + 
+  geom_point(aes(x = semana_fs,
+                 y = mean_weight,
+                 color = fishing_season)) +
+    geom_line(aes(x = semana_fs,
+                y = pred,
+                group = regiao,
+                color = regiao))
  
 ```
 
@@ -373,11 +455,17 @@ data collection by each fishing season:
 
 Weekly aggregation is problematic due to irregularity of week intervals resulting from the varying lenght of the 53rd week, a problem compounded by the leap years. Therefore, a custom grouping and slicing of the data is necessary
 
-Effort is measured as the number of boats operating on any single day.
+**Effort** is measured as the number of boats operating on any single day.
 
 * It is hard to define correctly whether any vessel, in a given day, is operating with octopus-targetting fishing gear. Because, in the polyvalent metiers, octopus is seldom a bycatch, there is an underlying assumption that vessels who landed octopus on any given day are a good indicator for the total of vessels who attempted to fish for octopus.
 
 * We aggregate effort on a given week by summing. As per the Asturias paper, "we grouped the raw data into weekly time steps to fit intra-annual generalized depletion models to each season’s data. Fishing effort was the total number of fishing days by all boats operating in any given week."
+
+**Spikes** proposed on the 2019 paper are 2:
+
+* Recruits grow enough to be available to the fishery (750g). This is plausible. *Positive*
+
+* Spawning females retreat and become harder to fish. Also plausible. *Negative*
 
 
 ```{r}
@@ -404,10 +492,29 @@ ts_w_FS_W = df %>%
 
 ```{r}
 library(CatDyn)
-df_catdyn_s = ts_w_FS_S %>%
+
+df_catdyn_s =
+ts_w_FS_S %>%
+  filter(fishing_season == '2021') %>% 
+  left_join(.,
+            media %>% 
+              # mutate(fishing_season = factor(fishing_season)) %>% 
+              filter(regiao == 'Costa Sul'),
+            by = c('semana_fs' = 'semana_fs'))
+
+df_catdyn_s = df_catdyn_s %>%
   ungroup() %>% 
   transmute(obscat = QVENDA,
-            obseff = effort)
+            obseff = effort,
+            mw = avg_w,
+            week = semana_fs)
+
+## Check contraste
+
+df_catdyn_s %>% 
+  ggplot() + 
+  geom_line(aes(x = week,
+                y = obscat))
 
 occ_cat = as.CatDynData(x=df_catdyn_s,
                        step="week",
@@ -417,45 +524,45 @@ occ_cat = as.CatDynData(x=df_catdyn_s,
                        colmbw=3,
                        unitseff="trips",
                        unitscat="kg",
-                       unitsmbw="kg",
+                       unitsmbw="g",
                        nmult="bill",
-                       season.dates=c(as.Date("1995-01-01"),
-                                      as.Date("2022-12-31")))
+                       season.dates=c(as.Date("2021-10-01"),
+                                      as.Date("2022-09-25")))
 
 plot.CatDynData(occ_cat,
                 mark = T,
                 offset = c(0,1,10),
                 hem = 'N')
 
-M         <- 1/12 #1/Time step
+M         <- 1/53 #1/Time step
 N0.ini    <- 1 #billions
 P1.ini    <- 0.5 #billions
-k.ini     <- 0.02 #1/n of boats
+P2.ini    <- 0.5 #billions
+k.ini     <- 0.01 #1/n of boats
 alpha.ini <- 1.7 #adimensional
 beta.ini  <- 0.6 #adimensional
-P1 = 70
+P1 = 52
+P2 = 69
 pars.ini  <- log(c(M,
                    N0.ini,
-                   P1.ini,
+                   P1.ini, P2.ini,
                    k.ini,
                    alpha.ini,
                    beta.ini))
 
 dates <- c(head(occ_cat$Data$`Artisanal-S`$time.step,1),
-           P1,
+           P1,P2,
            tail(occ_cat$Data$`Artisanal-S`$time.step,1))
 
 lgahi.apln.1P.ini <- catdynexp(x=occ_cat,
-                               p=1,
+                               p=2,
                                par=pars.ini,
                                dates=dates,
                                distr="aplnormal")
 
 
 CatDynFit(x = occ_cat,
-          p=1)
-          
-          
+          p=2,
           par=pars.ini,
           dates=dates,
           distr="aplnormal",
@@ -464,6 +571,18 @@ CatDynFit(x = occ_cat,
 
 ```
 
+```{r}
+## Check contraste
+
+df_catdyn_s %>% 
+  ggplot() + 
+  geom_line(aes(x = week,
+                y = obscat)) +
+   geom_line(aes(x = week,
+                y = obseff*100),
+             color = 'red') + 
+  theme_bw()
+```
 
 
 
