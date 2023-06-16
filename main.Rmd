@@ -32,7 +32,7 @@ Carregar vendas dia:
 
 ```{r, include = F}
 # source('scripts/vd_import.R')
-load('data/initial_data_occ.Rdata')
+load('data/initial_data_occ_sumario.Rdata')
 ```
 
 Função auxiliar que agrupa vd em regioes (S vs W) e cria as unidades temporais necessarias para as secçoes seguintes:
