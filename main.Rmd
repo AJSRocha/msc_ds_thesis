@@ -32,6 +32,7 @@ Carregar vendas dia:
 
 ```{r, include = F}
 # source('scripts/vd_import.R')
+load('data/initial_data_occ.Rdata')
 load('data/initial_data_occ_sumario.Rdata')
 ```
 
@@ -481,12 +482,12 @@ ts_w_FS_S = df %>%
             effort = sum(effort))
   
 
-ts_w_FS_W = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(semana_fs, fishing_season, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Ocidental')
+# ts_w_FS_W = df %>%
+#   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
+#   filter(EGRUPART %in% c('MIS_MIS')) %>% 
+#   group_by(semana_fs, fishing_season, regiao) %>% 
+#   summarise(QVENDA = sum(QVENDA)) %>% 
+#   filter(regiao == 'Costa Ocidental')
 ```
 
 
@@ -525,7 +526,7 @@ occ_cat = as.CatDynData(x=df_catdyn_s,
                        unitseff="trips",
                        unitscat="kg",
                        unitsmbw="g",
-                       nmult="bill",
+                       nmult="mill",
                        season.dates=c(as.Date("2021-10-01"),
                                       as.Date("2022-09-25")))
 
@@ -535,27 +536,26 @@ plot.CatDynData(occ_cat,
                 hem = 'N')
 
 M         <- 1/53 #1/Time step
-N0.ini    <- 1 #billions
-P1.ini    <- 0.5 #billions
-P2.ini    <- 0.5 #billions
-k.ini     <- 0.01 #1/n of boats
-alpha.ini <- 1.7 #adimensional
+N0.ini    <- 10 #billions
+P1.ini    <- 0.1 #billions
+P2.ini    <- 0.05 #billions
+k.ini     <- 0.1 #1/n of boats
+alpha.ini <- 0.7 #adimensional
 beta.ini  <- 0.6 #adimensional
 P1 = 52
-P2 = 69
 pars.ini  <- log(c(M,
                    N0.ini,
-                   P1.ini, P2.ini,
+                   P1.ini,
                    k.ini,
                    alpha.ini,
                    beta.ini))
 
 dates <- c(head(occ_cat$Data$`Artisanal-S`$time.step,1),
-           P1,P2,
+           P1,
            tail(occ_cat$Data$`Artisanal-S`$time.step,1))
 
-lgahi.apln.1P.ini <- catdynexp(x=occ_cat,
-                               p=2,
+occ.P2.ini <- catdynexp(x=occ_cat,
+                               p=1,
                                par=pars.ini,
                                dates=dates,
                                distr="aplnormal")

@@ -1,3 +1,7 @@
+source('C://repos/path.R'); path('local')
+library(dplyr)
+library(ggplot2)
+
 bio16 = read.csv(paste0(dados, "/sic_naut//allspp_19972016_bio.csv"), sep = ";", dec = ",")
 
 bio16 = 
@@ -71,3 +75,20 @@ bio16[cm_mm,]$C_INDIVIDUAL_corr = bio16[cm_mm,]$C_INDIVIDUAL_corr*10
 
 bio16[is.na(bio16$C_INDIVIDUAL_corr),]$C_INDIVIDUAL_corr = 0
 bio16[bio16$C_INDIVIDUAL_corr == 12.2,]$C_INDIVIDUAL_corr = 122
+
+
+bio16 %>% 
+  filter(REGIAO == '27.9.a.s.a') %>% 
+  mutate(mes = substr(DATA, 6,7)) %>% 
+  group_by(ANO,mes) %>% 
+  summarise(F_RATIO = sum(SEXO == 'F')/length(SEXO)) %>% 
+ggplot() + 
+  geom_line(aes(x = mes,
+                y = F_RATIO,
+                group = ANO,
+                color = ANO)) + 
+  geom_hline(aes(yintercept = 0.5),color = 'black') +
+  facet_wrap(ANO~.) +
+  theme_bw()
+
+            
