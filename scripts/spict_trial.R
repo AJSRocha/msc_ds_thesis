@@ -15,8 +15,8 @@
 #             catch = catch)
 
 effort_ns = 
-  df %>% 
-  filter(regiao == 'Costa Sul') %>% 
+  vd %>% 
+  filter(zona == '27.9.a.s.a') %>% 
   filter(EGRUPART == 'MIS_MIS') %>% 
   group_by(year_sale, IEMBARCA) %>% 
   summarise(effort = n_distinct(IDATVEND),
@@ -24,6 +24,18 @@ effort_ns =
   group_by(year_sale) %>% 
   summarise(effort = sum(effort),
             catch = sum(catch))
+
+effort_ns_correcto = 
+  vd %>% 
+  filter(zona == '27.9.a.s.a') %>% 
+  filter(EGRUPART == 'MIS_MIS') %>% 
+  group_by(IDATVEND, year_sale) %>% 
+  summarise(effort = n_distinct(IEMBARCA),
+            catch = sum(QVENDA)) %>% 
+  group_by(year_sale) %>% 
+  summarise(effort = sum(effort),
+            catch = sum(catch))
+
 
 
 save(effort_ns, file = 'app/data/spict.Rdata')
@@ -33,10 +45,10 @@ library(spict)
 # effort_ns$time_nm = 1995 + (1:length(effort_ns$time)/12)
   
   
-timeC = effort_ns$year_sale %>% as.character %>% as.numeric()
-timeI = effort_ns$year_sale %>% as.character %>% as.numeric()
-obsC = effort_ns$catch
-obsI = effort_ns$effort
+timeC = effort_ns_correcto$year_sale %>% as.character %>% as.numeric()
+timeI = effort_ns_correcto$year_sale %>% as.character %>% as.numeric()
+obsC = effort_ns_correcto$catch
+obsI = effort_ns_correcto$effort
 
 modelo_spict = list(timeC = timeC,
                     timeI = timeC,

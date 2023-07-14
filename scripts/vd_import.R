@@ -26,8 +26,7 @@ for(i in c(1995:2022)){
     summarise(QVENDA_total = sum(QVENDA),
               OCC = sum(QVENDA[EESPECIE %in% c('OCC', 'OCT')])))}
 
-vd = rbind(vd, vd_2022)
-rm(vd_2022)
+vd = rbind(vd, vd_2022); rm(vd_2022)
 
 vd = do.call("rbind", mget(ls(pattern = "^vd_*")))
 rm(list = ls(pattern = 'vd_'))
@@ -39,7 +38,7 @@ rm(list = ls(pattern = 'vd_'))
 names(vd)[grepl('OCC', names(vd))] = 'QVENDA'
 names(vd)
 
-save(vd, file = 'data/initial_data_occ.Rdata_sumario')
+save(vd, file = 'data/initial_data_occ_sumario.Rdata')
 
 # %>% 
 #   group_by(IEMBARCA, IPORTO, PORTO, zona, IDATVEND,
