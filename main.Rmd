@@ -32,7 +32,7 @@ Carregar vendas dia:
 
 ```{r, include = F}
 # source('scripts/vd_import.R')
-load('data/initial_data_occ.Rdata')
+# load('data/initial_data_occ.Rdata')
 load('data/initial_data_occ_sumario.Rdata')
 ```
 
@@ -69,23 +69,36 @@ Função auxiliar que agrupa vd em regioes (S vs W) e cria as unidades temporais
 # }
 
 # Calcula numero de semanas desde o inicio do ano de calendario
-semanador_y = function(x){
-  week_start =paste0(as.numeric(as.character(x$year_sale)), '-01-01') %>% 
-    as.POSIXct(format = '%Y-%m-%d')
-    res = (difftime(x$IDATVEND, week_start, units = 'days')/7 +1) %>% trunc()
-    return(res)
-  }
+# semanador_y = function(x){
+#   week_start =paste0(as.numeric(as.character(x$year_sale)), '-01-01') %>%
+#     as.POSIXct(format = '%Y-%m-%d')
+#     res = (difftime(x$IDATVEND, week_start, units = 'days')/7 +1) %>% trunc()
+#     return(res)
+# }
 
 # Calcula numero de semanas desde o inicio da fishing season
-semanador_fs = function(x){
-  mod = ifelse(as.numeric(as.character(x$year_sale)) == as.numeric(as.character(x$fishing_season)),
-               0,
-               1)
-  week_start =paste0(as.numeric(as.character(x$year_sale))-mod, '-10-01') %>% 
-    as.POSIXct(format = '%Y-%m-%d')
-    res = (difftime(x$IDATVEND, week_start, units = 'days')/7 +1) %>% trunc()
-    return(res)
-  }
+# semanador_fs = function(x){
+#   mod = ifelse(as.numeric(as.character(x$year_sale)) == as.numeric(as.character(x$fishing_season)),
+#                0,
+#                1)
+#   week_start =paste0(as.numeric(as.character(x$year_sale))-mod, '-10-01') %>% 
+#     as.POSIXct(format = '%Y-%m-%d')
+#     res = (difftime(x$IDATVEND, week_start, units = 'days')/7 +1) %>% trunc()
+#     return(res)
+#   }
+
+# arranjador = function(df){
+#   temp = df %>%
+#     mutate(regiao = case_when(as.character(zona) %in% 
+#                               c('27.9.a.c.n', '27.9.a.c.s') ~ 'Costa Ocidental',
+#                             as.character(zona) == '27.9.a.s.a' ~ 'Costa Sul',
+#                             T ~ as.character(zona)),
+#            dia = weekdays(IDATVEND),
+#           fishing_season = case_when(month_sale %in% c('10','11','12') ~
+#                                        as.numeric(as.character(year_sale)),
+#                                        T ~ as.numeric(as.character(year_sale)) - 1) %>% factor)
+#   return(temp)
+#}
 
 arranjador = function(df){
   temp = df %>%
@@ -93,184 +106,41 @@ arranjador = function(df){
                               c('27.9.a.c.n', '27.9.a.c.s') ~ 'Costa Ocidental',
                             as.character(zona) == '27.9.a.s.a' ~ 'Costa Sul',
                             T ~ as.character(zona)),
-           dia = weekdays(IDATVEND),
-          fishing_season = case_when(month_sale %in% c('10','11','12') ~
-                                       as.numeric(as.character(year_sale)),
-                                       T ~ as.numeric(as.character(year_sale)) - 1) %>% factor)
+           semana = lubridate::isoweek(IDATVEND),
+           dia = weekdays(IDATVEND))
   return(temp)
 }
+
 ```
 
 Executa transformação do dataframe
 
 ```{r}
-df = arranjador(vd) %>% 
-  mutate(semana = semanador_y(.),
-         semana_fs = semanador_fs(.))
+df = arranjador(vd)
 
-df %>% select(year_sale, IDATVEND, semana, fishing_season, semana_fs) %>% View()
+# df %>% select(year_sale, IDATVEND, semana, fishing_season, semana_fs) %>% View()
 # grava df no data
 
-df %>% 
-  select(IDATVEND, year_sale, fishing_season, semana, semana_fs) %>%
-  mutate(teste = semana_fs - semana) %>% View
+# df %>% 
+#   select(IDATVEND, year_sale, fishing_season, semana, semana_fs) %>%
+#   mutate(teste = semana_fs - semana) %>% View
 
-temp = df %>% 
-  select(IDATVEND, year_sale, fishing_season, semana, semana_fs) %>%
-  mutate(teste = semana_fs - semana) 
+# temp = df %>% 
+#   select(IDATVEND, year_sale, fishing_season, semana, semana_fs) %>%
+#   mutate(teste = semana_fs - semana) 
+
+save(df, file = 'data/initial_data_occ_df.Rdata')
 
 ```
 
 Compila vendas-dia em series temporais
 
-```{r}
-ts_w_FS_S = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(semana_fs, fishing_season, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = c(1994, 14), end= c(2022,14), frequency = 53)
 
-ts_w_Y_S = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(semana, year_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = c(1995, 1), end= c(2022,12), frequency = 53)
-
-autoplot(ts_w_FS_S) + theme_classic() + labs(title = 'Weekly Fishing Seasons')
-autoplot(ts_w_Y_S) + theme_classic() + labs(title = 'Weekly Calendar Year')
-
-ts_w_FS_W = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(semana_fs, fishing_season, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Ocidental') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = 1994, end= 2022, frequency = 52)
-```
 
 ```{r}
 ## Série de desembarques frota artesanal - Costa Sul:
 
-ts_w_S = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(semana_tot, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = 1995, end= 2023, frequency = 52)
 
-ts_m_S = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(year_sale, month_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = 1995, end= 2023, frequency = 12)
-
-ts_q_S = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(year_sale, quarter_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = 1995, end= 2023, frequency = 4)
-
-ts_y_S = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(year_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = 1995, end= 2023, frequency = 1)
-
-ts_fs_S = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(fishing_season, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = 1994, end= 2023, frequency = 1)
-
-
-# grid.arrange(
-# autoplot(ts_w_S) + theme_classic() + labs(title = 'Semanal'),
-# autoplot(ts_m_S) + theme_classic() + labs(title = 'Mensal'),
-# autoplot(ts_q_S) + theme_classic() + labs(title = 'Trimestral'),
-# autoplot(ts_y_S) + theme_classic() + labs(title = 'Anual'),
-# ncol = 2)
-
-
-## Série de desembarques frota artesanal - Costa Ocidental:
-
-ts_w_W = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(semana_tot, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Ocidental') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = 1995, end= 2023, frequency = 52)
-
-ts_m_W = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(year_sale, month_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Ocidental') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = 1995, end= 2023, frequency = 12)
-
-ts_q_W = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(year_sale, quarter_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Ocidental') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = 1995, end= 2023, frequency = 4)
-
-ts_y_W = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(year_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Ocidental') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = 1995, end= 2023, frequency = 1)
-
-ts_fs_W = df %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(fishing_season, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Ocidental') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = 1994, end= 2023, frequency = 1)
 
 
 # grid.arrange(

@@ -1,0 +1,181 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+load('data/initial_data_occ_df.Rdata')
+```
+
+# Pergunta inocente: ha polvo ao fim-de-semana?
+
+```{r}
+df %>% mutate()
+```
+
+
+```{r}
+
+## Weekly
+ts_w_MIS_S = df %>%
+  filter(EGRUPART %in% c('MIS_MIS')) %>% 
+  group_by(semana, year_sale, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Sul') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
+
+
+ts_w_MIS_W = df %>%
+  filter(EGRUPART %in% c('MIS_MIS')) %>% 
+  group_by(semana, year_sale, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Ocidental') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
+
+ts_w_OTB_S = df %>%
+  filter(EGRUPART %in% c('OTB')) %>% 
+  group_by(semana, year_sale, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Sul') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
+
+
+ts_w_OTB_W = df %>%
+  filter(EGRUPART %in% c('OTB')) %>% 
+  group_by(semana, year_sale, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Ocidental') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
+
+
+
+```
+
+# Plots individuais
+
+```{r}
+## SEMANAL
+
+autoplot(ts_w_MIS_S) + theme_classic() + 
+  labs(title = 'Weekly Series - Polyvalent fleet - South Coast',
+       x = 'Year',
+       y = 'landings (kg)')
+	   
+autoplot(ts_w_MIS_W) + theme_classic() + 
+  labs(title = 'Weekly Series - Polyvalent fleet - West Coast',
+       x = 'Year',
+       y = 'landings (kg)')
+
+autoplot(ts_w_OTB_S) + theme_classic() + 
+  labs(title = 'Weekly Series - Bottom Trawl fleet - South Coast',
+       x = 'Year',
+       y = 'landings (kg)')
+	   
+autoplot(ts_w_OTB_W) + theme_classic() + 
+  labs(title = 'Weekly Series - Bottom Trawl fleet - West Coast',
+       x = 'Year',
+       y = 'landings (kg)')
+```
+
+
+```{r, fig.width=12}
+# Exemplo 
+# autoplot(ts.union(ts_w_MIS_S,ts_w_MIS_W), facets = F) + theme_classic() + 
+#   scale_color_manual(values = wes_palette('AsteroidCity2',5)[c(1,2)])
+
+fig = 
+grid.arrange(
+  autoplot(ts_w_MIS_S, col = wes_palette('AsteroidCity1',5)[1]) + theme_classic() + 
+  labs(title = 'Weekly Series - Polyvalent fleet - South Coast',
+       x = 'Year',
+       y = 'landings (kg)'), 
+  
+autoplot(ts_w_MIS_W, col = wes_palette('AsteroidCity1',5)[2]) + theme_classic() + 
+  labs(title = 'Weekly Series - Polyvalent fleet - West Coast',
+       x = 'Year',
+       y = 'landings (kg)'), 
+
+autoplot(ts_w_OTB_S, col = wes_palette('AsteroidCity1',5)[3]) + theme_classic() + 
+  labs(title = 'Weekly Series - Bottom Trawl fleet - South Coast',
+       x = 'Year',
+       y = 'landings (kg)'),
+	   
+autoplot(ts_w_OTB_W, col = wes_palette('AsteroidCity1',5)[4]) + theme_classic() + 
+  labs(title = 'Weekly Series - Bottom Trawl fleet - West Coast',
+       x = 'Year',
+       y = 'landings (kg)'),
+ncol = 1)
+
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'figures/mm_boxjenkins_weekly_series.png')
+```
+
+# Modelacao
+
+## Weekly
+
+### ts_w_MIS_S
+
+```{r}
+BoxCox.lambda(ts_w_MIS_S)
+tseries::adf.test(ts_w_MIS_S, alternative='s') # pvalue = 0.01
+tseries::kpss.test(ts_w_MIS_S)
+
+```
+It does not appear for the polyvalent fleet in the South that differentiation is necessary
+
+```{r}
+nsdiffs(ts_w_MIS_S)
+ndiffs(diff(ts_w_MIS_S,12))
+```
+
+```{r}
+dts.train = window(ts_w_MIS_S, end=c(2020,52))
+dts.test=window(ts_w_MIS_S, start=c(2021,1), end=c(2022,52))
+
+auto.arima(dts.train) 
+# (2,1,2)x(1,0,1)_52
+m1 = Arima(dts.train, order = c(2,1,2), seasonal=list(order=c(1,0,1), period=52))
+m1.f = forecast(m1,h=104)
+
+```
+
+```{r}
+
+gridExtra::grid.arrange(
+  autoplot(m1.f,
+         alpha = 1,
+         size = 0.5,
+         col = wes_palette('FantasticFox1',4)[1],
+         fcol = wes_palette('FantasticFox1',4)[2]) +
+    labs(title = expression('SARIMA(2,1,2)*(1,0,1)'[52])) +
+    theme_light(),
+  autoplot(dts.train, col = wes_palette('FantasticFox1',4)[3]) +
+  autolayer(dts.test, color = wes_palette('FantasticFox1',4)[4],
+          linetype = 'dashed') +
+  labs(title = 'Real Data') +
+  theme_light(),
+ncol=1)
+  
+
+
+autoplot(m1.f,
+         alpha = 1,
+         size = 0.5) +
+  # xlim(as.Date('01-01-2020', format = '%d-%m-%Y'),
+  #      as.Date('01-12-2020', format = '%d-%m-%Y')) +
+autolayer(dts.test, color = 'red',
+          linetype = 'dashed') +
+  labs(title = expression('SARIMA(2,1,2)*(1,0,1)'[52])) +
+  theme_light()
+```
+
+
