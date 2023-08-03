@@ -8,15 +8,10 @@ output: html_notebook
 load('data/initial_data_occ_df.Rdata')
 ```
 
-# Pergunta inocente: ha polvo ao fim-de-semana?
+# Step 1 - Time the pre-processing of the data - convert into time series
 
 ```{r}
-df %>% mutate()
-```
-
-
-```{r}
-
+a = Sys.time()
 ## Weekly
 ts_w_OTB_W = df %>%
   filter(EGRUPART %in% c('OTB')) %>% 
@@ -54,71 +49,67 @@ ts_w_MIS_S = df %>%
   select(QVENDA) %>% 
   ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
 
-ts_w_OTB_W = df %>%
+## Yearly
+
+ts_y_OTB_W = df %>%
   filter(EGRUPART %in% c('OTB')) %>% 
-  group_by(semana, year_sale, regiao) %>% 
+  group_by(year_sale, regiao) %>% 
   summarise(QVENDA = sum(QVENDA)) %>% 
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
+  ts(start = c(1995), end= c(2022), frequency = 1)
 
-ts_w_MIS_W = df %>%
+ts_y_MIS_W = df %>%
   filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(semana, year_sale, regiao) %>% 
+  group_by(year_sale, regiao) %>% 
   summarise(QVENDA = sum(QVENDA)) %>% 
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
+  ts(start = c(1995), end= c(2022), frequency = 1)
 
-# Yearly
-
-ts_w_OTB_S = df %>%
+ts_y_OTB_S = df %>%
   filter(EGRUPART %in% c('OTB')) %>% 
-  group_by(semana, year_sale, regiao) %>% 
+  group_by(year_sale, regiao) %>% 
   summarise(QVENDA = sum(QVENDA)) %>% 
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
+  ts(start = c(1995), end= c(2022), frequency = 1)
 
-ts_w_MIS_S = df %>%
+ts_y_MIS_S = df %>%
   filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(semana, year_sale, regiao) %>% 
+  group_by(year_sale, regiao) %>% 
   summarise(QVENDA = sum(QVENDA)) %>% 
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
+  ts(start = c(1995), end= c(2022), frequency = 1)
 
+b = Sys.time()
+time.boxjenkins.preproc = b-a
 ```
-
-```{r}
-print(xtable(teste[,c(1:3)]), type = "latex", file = "tables/filename2.tex", only.contents = T)
-```
-
-
 ```{r}
 fig = 
 grid.arrange(
   
   
-  autoplot(ts_w_OTB_W, col = wes_palette('Zissou1',4)[4]) + theme_classic() + 
+  autoplot(ts_w_OTB_W, col = col_otb_w) + theme_classic() + 
   labs(title = 'Weekly Series - Bottom Trawl fleet - West Coast',
        x = 'Year',
        y = 'landings (kg)'),
   
-autoplot(ts_w_MIS_W, col = wes_palette('Zissou1',4)[3]) + theme_classic() + 
+autoplot(ts_w_MIS_W, col = col_mis_w) + theme_classic() + 
   labs(title = 'Weekly Series - Polyvalent fleet - West Coast',
        x = 'Year',
        y = 'landings (kg)'), 
 
-autoplot(ts_w_OTB_S, col = wes_palette('Zissou1',4)[1]) + theme_classic() + 
+autoplot(ts_w_OTB_S, col = col_otb_s) + theme_classic() + 
   labs(title = 'Weekly Series - Bottom Trawl fleet - South Coast',
        x = 'Year',
        y = 'landings (kg)'),
-autoplot(ts_w_MIS_S, col = wes_palette('Zissou1',4)[2]) + theme_classic() + 
+autoplot(ts_w_MIS_S, col = col_mis_s) + theme_classic() + 
   labs(title = 'Weekly Series - Polyvalent fleet - South Coast',
        x = 'Year',
        y = 'landings (kg)'),
@@ -126,9 +117,61 @@ autoplot(ts_w_MIS_S, col = wes_palette('Zissou1',4)[2]) + theme_classic() +
 
 ncol = 1)
 
-ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'figures/mm_boxjenkins_weekly_series.png')
+# ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'figures/mm_boxjenkins_weekly_series.png')
 ```
 
+
+
+
+
+```{r}
+fig = 
+grid.arrange(
+  
+  
+  autoplot(ts_y_OTB_W, col = col_otb_w) + theme_classic() + 
+  labs(title = 'Yearly Series - Bottom Trawl fleet - West Coast',
+       x = 'Year',
+       y = 'landings (kg)'),
+  
+autoplot(ts_y_MIS_W, col = col_mis_w) + theme_classic() + 
+  labs(title = 'Yearly Series - Polyvalent fleet - West Coast',
+       x = 'Year',
+       y = 'landings (kg)'), 
+
+autoplot(ts_y_OTB_S, col = col_otb_s) + theme_classic() + 
+  labs(title = 'Yearly Series - Bottom Trawl fleet - South Coast',
+       x = 'Year',
+       y = 'landings (kg)'),
+autoplot(ts_y_MIS_S, col = col_mis_s) + theme_classic() + 
+  labs(title = 'Yearly Series - Polyvalent fleet - South Coast',
+       x = 'Year',
+       y = 'landings (kg)'),
+	   
+
+ncol = 1)
+
+# ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'figures/mm_boxjenkins_yearly_series.png')
+```
+
+```{r}
+print(xtable(teste[,c(1:3)]), type = "latex", file = "tables/filename2.tex", only.contents = T)
+```
+
+```{r, fig.height=20, fig.width=20}
+par(mfrow = c(4,2))
+acf(ts_w_OTB_W);pacf(ts_w_OTB_W)
+acf(ts_w_MIS_W);pacf(ts_w_MIS_W)
+acf(ts_w_OTB_S);pacf(ts_w_OTB_S)
+acf(ts_w_MIS_S);pacf(ts_w_MIS_S)
+```
+```{r, fig.height=20, fig.width=20}
+par(mfrow = c(4,2))
+acf(ts_y_OTB_W);pacf(ts_y_OTB_W)
+acf(ts_y_MIS_W);pacf(ts_y_MIS_W)
+acf(ts_y_OTB_S);pacf(ts_y_OTB_S)
+acf(ts_y_MIS_S);pacf(ts_y_MIS_S)
+```
 
 # Modelacao
 
@@ -142,6 +185,7 @@ tseries::adf.test(ts_w_MIS_S, alternative='s') # pvalue = 0.01
 tseries::kpss.test(ts_w_MIS_S)
 
 ```
+
 It does not appear for the polyvalent fleet in the South that differentiation is necessary
 
 ```{r}

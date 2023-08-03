@@ -18,11 +18,22 @@ library(gridExtra); #library(ggplotify)
 library(tidyverse)
 library(wesanderson)
 library(dplyr)
+library(xtable)
 
 #atencao ao carregar o ggfortify e o ggplotify, eles sao incompativeis com os metodos de autoplot e autolayer
 
 #library(CatDyn)
 ```
+
+# Colour Schemes
+
+```{r}
+col_otb_w  = wes_palette('Zissou1',4)[4]
+col_mis_w  = wes_palette('Zissou1',4)[3]
+col_otb_s  = wes_palette('Zissou1',4)[1]
+col_mis_s  = wes_palette('Zissou1',4)[2]
+```
+
 
 # Importar dados
 
