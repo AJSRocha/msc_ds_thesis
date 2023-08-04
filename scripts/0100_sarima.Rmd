@@ -8,19 +8,18 @@ output: html_notebook
 load('data/initial_data_occ_df.Rdata')
 ```
 
-# Step 1 - Time the pre-processing of the data - convert into time series
+# Methodology
+
+```{r}
+citation('stats')
+citation('forecast')
+citation('tseries')
+```
+
 
 ```{r}
 a = Sys.time()
 ## Weekly
-ts_w_OTB_W = df %>%
-  filter(EGRUPART %in% c('OTB')) %>% 
-  group_by(semana, year_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Ocidental') %>%
-  ungroup() %>% 
-  select(QVENDA) %>% 
-  ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
 
 ts_w_MIS_W = df %>%
   filter(EGRUPART %in% c('MIS_MIS')) %>% 
@@ -31,14 +30,15 @@ ts_w_MIS_W = df %>%
   select(QVENDA) %>% 
   ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
 
-ts_w_OTB_S = df %>%
+ts_w_OTB_W = df %>%
   filter(EGRUPART %in% c('OTB')) %>% 
   group_by(semana, year_sale, regiao) %>% 
   summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>%
+  filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
   ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
+
 
 ts_w_MIS_S = df %>%
   filter(EGRUPART %in% c('MIS_MIS')) %>% 
@@ -49,16 +49,19 @@ ts_w_MIS_S = df %>%
   select(QVENDA) %>% 
   ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
 
-## Yearly
 
-ts_y_OTB_W = df %>%
+ts_w_OTB_S = df %>%
   filter(EGRUPART %in% c('OTB')) %>% 
-  group_by(year_sale, regiao) %>% 
+  group_by(semana, year_sale, regiao) %>% 
   summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Ocidental') %>%
+  filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
-  ts(start = c(1995), end= c(2022), frequency = 1)
+  ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
+
+
+
+## Yearly
 
 ts_y_MIS_W = df %>%
   filter(EGRUPART %in% c('MIS_MIS')) %>% 
@@ -69,11 +72,12 @@ ts_y_MIS_W = df %>%
   select(QVENDA) %>% 
   ts(start = c(1995), end= c(2022), frequency = 1)
 
-ts_y_OTB_S = df %>%
+
+ts_y_OTB_W = df %>%
   filter(EGRUPART %in% c('OTB')) %>% 
   group_by(year_sale, regiao) %>% 
   summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>%
+  filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
   select(QVENDA) %>% 
   ts(start = c(1995), end= c(2022), frequency = 1)
@@ -87,104 +91,202 @@ ts_y_MIS_S = df %>%
   select(QVENDA) %>% 
   ts(start = c(1995), end= c(2022), frequency = 1)
 
+ts_y_OTB_S = df %>%
+  filter(EGRUPART %in% c('OTB')) %>% 
+  group_by(year_sale, regiao) %>% 
+  summarise(QVENDA = sum(QVENDA)) %>% 
+  filter(regiao == 'Costa Sul') %>%
+  ungroup() %>% 
+  select(QVENDA) %>% 
+  ts(start = c(1995), end= c(2022), frequency = 1)
+
+
+
 b = Sys.time()
 time.boxjenkins.preproc = b-a
 ```
+
 ```{r}
 fig = 
 grid.arrange(
   
+autoplot(ts_w_MIS_W, col = col_mis_w) + theme_classic() + 
+  labs(title = 'Weekly Series - Polyvalent fleet - West Coast',
+       x = 'Year',
+       y = 'landings (kg)'),   
   
-  autoplot(ts_w_OTB_W, col = col_otb_w) + theme_classic() + 
+autoplot(ts_w_OTB_W, col = col_otb_w) + theme_classic() + 
   labs(title = 'Weekly Series - Bottom Trawl fleet - West Coast',
        x = 'Year',
        y = 'landings (kg)'),
   
-autoplot(ts_w_MIS_W, col = col_mis_w) + theme_classic() + 
-  labs(title = 'Weekly Series - Polyvalent fleet - West Coast',
+autoplot(ts_w_MIS_S, col = col_mis_s) + theme_classic() + 
+  labs(title = 'Weekly Series - Polyvalent fleet - South Coast',
        x = 'Year',
-       y = 'landings (kg)'), 
+       y = 'landings (kg)'),
 
 autoplot(ts_w_OTB_S, col = col_otb_s) + theme_classic() + 
   labs(title = 'Weekly Series - Bottom Trawl fleet - South Coast',
        x = 'Year',
        y = 'landings (kg)'),
-autoplot(ts_w_MIS_S, col = col_mis_s) + theme_classic() + 
-  labs(title = 'Weekly Series - Polyvalent fleet - South Coast',
-       x = 'Year',
-       y = 'landings (kg)'),
-	   
 
 ncol = 1)
 
-# ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'figures/mm_boxjenkins_weekly_series.png')
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_boxjenkins_weekly_series.png')
 ```
-
-
-
-
 
 ```{r}
 fig = 
 grid.arrange(
   
-  
-  autoplot(ts_y_OTB_W, col = col_otb_w) + theme_classic() + 
+autoplot(ts_y_MIS_W, col = col_mis_w) + theme_classic() + 
+  labs(title = 'Yearly Series - Polyvalent fleet - West Coast',
+       x = 'Year',
+       y = 'landings (kg)'),
+
+autoplot(ts_y_OTB_W, col = col_otb_w) + theme_classic() + 
   labs(title = 'Yearly Series - Bottom Trawl fleet - West Coast',
        x = 'Year',
        y = 'landings (kg)'),
   
-autoplot(ts_y_MIS_W, col = col_mis_w) + theme_classic() + 
-  labs(title = 'Yearly Series - Polyvalent fleet - West Coast',
-       x = 'Year',
-       y = 'landings (kg)'), 
-
-autoplot(ts_y_OTB_S, col = col_otb_s) + theme_classic() + 
-  labs(title = 'Yearly Series - Bottom Trawl fleet - South Coast',
-       x = 'Year',
-       y = 'landings (kg)'),
 autoplot(ts_y_MIS_S, col = col_mis_s) + theme_classic() + 
   labs(title = 'Yearly Series - Polyvalent fleet - South Coast',
        x = 'Year',
        y = 'landings (kg)'),
 	   
+autoplot(ts_y_OTB_S, col = col_otb_s) + theme_classic() + 
+  labs(title = 'Yearly Series - Bottom Trawl fleet - South Coast',
+       x = 'Year',
+       y = 'landings (kg)'),
 
 ncol = 1)
 
-# ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'figures/mm_boxjenkins_yearly_series.png')
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_boxjenkins_yearly_series.png')
 ```
+
+
+# ACF - Weekly West
+
+```{r, fig.height = 20, fig.width=20}
+dev.new()
+par(mfrow = c(2,2), cex.main = 3)
+acf(ts_w_MIS_W, col = col_mis_w, main = 'West MIS - Weekly - ACF', lwd = 5);
+pacf(ts_w_MIS_W, col = col_mis_w, main = 'West MIS - Weekly - pACF', lwd = 5)
+acf(ts_w_OTB_W, col = col_otb_w, main = 'West OTB - Weekly - ACF', lwd = 5);
+pacf(ts_w_OTB_W, col = col_otb_w, main = 'West OTB - Weekly - pACF', lwd = 5)
+
+grid.echo()
+fig = grid.grab()
+
+ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/res_boxjenkins_week_W_acf.png')
+```
+
+# ACF - Weekly South
+
+```{r, fig.height=20, fig.width=20}
+
+par(mfrow = c(2,2), cex.main = 3)
+acf(ts_w_MIS_S, col = col_mis_s, main = 'South MIS - Weekly - ACF', lwd = 5);
+pacf(ts_w_MIS_S, col = col_mis_s, main = 'South MIS - Weekly - pACF', lwd = 5)
+acf(ts_w_OTB_S, col = col_otb_s, main = 'South OTB - Weekly - ACF', lwd = 5);
+pacf(ts_w_OTB_S, col = col_otb_s, main = 'South OTB - Weekly - pACF', lwd = 5)
+
+grid.echo()
+fig = grid.grab()
+
+ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/res_boxjenkins_week_S_acf.png')
+```
+
+# ACF - Yearly West
+
+```{r, fig.height = 20, fig.width=20}
+dev.new()
+par(mfrow = c(2,2), cex.main = 3)
+acf(ts_y_MIS_W, col = col_mis_w, main = 'West MIS - Yearly - ACF', lwd = 5);
+pacf(ts_y_MIS_W, col = col_mis_w, main = 'West MIS - Yearly - pACF', lwd = 5)
+acf(ts_y_OTB_W, col = col_otb_w, main = 'West OTB - Yearly - ACF', lwd = 5);
+pacf(ts_y_OTB_W, col = col_otb_w, main = 'West OTB - Yearly - pACF', lwd = 5)
+
+grid.echo()
+fig = grid.grab()
+
+ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/res_boxjenkins_year_W_acf.png')
+```
+
+# ACF - Yearly South
+
+```{r, fig.height = 20, fig.width=20}
+dev.new()
+par(mfrow = c(2,2), cex.main = 3)
+acf(ts_y_MIS_S, col = col_mis_s, main = 'South MIS - Yearly - ACF', lwd = 5);
+pacf(ts_y_MIS_S, col = col_mis_s, main = 'South MIS - Yearly - pACF', lwd = 5)
+acf(ts_y_OTB_S, col = col_otb_s, main = 'South OTB - Yearly - ACF', lwd = 5);
+pacf(ts_y_OTB_S, col = col_otb_s, main = 'South OTB - Yearly - pACF', lwd = 5)
+
+grid.echo()
+fig = grid.grab()
+
+ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/res_boxjenkins_year_S_acf.png')
+```
+
+# Estacionariedade:
 
 ```{r}
-print(xtable(teste[,c(1:3)]), type = "latex", file = "tables/filename2.tex", only.contents = T)
+
+estacionaridade = c()
+series = c('ts_w_MIS_W','ts_w_OTB_W',
+           'ts_w_MIS_S','ts_w_OTB_S',
+           'ts_y_MIS_W','ts_y_OTB_W',
+           'ts_y_MIS_S','ts_y_OTB_S')
+
+for(i in series){
+  temp = get(i)
+  res = tseries::adf.test(temp, alternative='s') # pvalue = 0.01
+  estacionaridade[length(estacionaridade)+1] = res$p.value
+  rm(temp, res)
+}
+
+diferenca_ns = c()
+diferenca_s = c()
+
+for(i in 1:8){
+  temp = get(series[i])
+  res_ns = ndiffs(temp)
+  diferenca_ns[length(diferenca_ns)+1] = res_ns
+  if(i %in% c(1:4)){
+    diferenca_s[length(diferenca_s)+1] = nsdiffs(temp)}
+    else{diferenca_s[length(diferenca_s)+1] = NA}
+  rm(temp, res_ns)
+}
+
+tab_estac = data.frame('fleet' = c('Polyvalent Fleet - West Coast - Weeks',
+                                 'Bottom Trawl Fleet - West Coast - Weeks',
+                                 'Polyvalent Fleet - South Coast - Weeks',
+                                 'Bottom Trawl Fleet - South Coast - Weeks',
+                                 'Polyvalent Fleet - West Coast - Years',
+                                 'Bottom Trawl Fleet - West Coast - Years',
+                                 'Polyvalent Fleet - South Coast - Years',
+                                 'Bottom Trawl Fleet - South Coast - Years'),
+                       'p-value' = estacionaridade,
+                       'Estationary?' = ifelse(estacionaridade < 0.05, 'Yes', 'No'),
+                       'Differentiation' = diferenca_ns,
+                       'S. Differentiation' = diferenca_s)
+
+# BoxCox.lambda(ts_w_MIS_S)
+# tseries::kpss.test(ts_w_MIS_S)
+
+print(xtable(tab_estac), type = "latex", file = "tables/res_estac.tex", only.contents = T)
+
 ```
 
-```{r, fig.height=20, fig.width=20}
-par(mfrow = c(4,2))
-acf(ts_w_OTB_W);pacf(ts_w_OTB_W)
-acf(ts_w_MIS_W);pacf(ts_w_MIS_W)
-acf(ts_w_OTB_S);pacf(ts_w_OTB_S)
-acf(ts_w_MIS_S);pacf(ts_w_MIS_S)
-```
-```{r, fig.height=20, fig.width=20}
-par(mfrow = c(4,2))
-acf(ts_y_OTB_W);pacf(ts_y_OTB_W)
-acf(ts_y_MIS_W);pacf(ts_y_MIS_W)
-acf(ts_y_OTB_S);pacf(ts_y_OTB_S)
-acf(ts_y_MIS_S);pacf(ts_y_MIS_S)
-```
+
+
 
 # Modelacao
 
 ## Weekly
 
 ### ts_w_MIS_S
-
-```{r}
-BoxCox.lambda(ts_w_MIS_S)
-tseries::adf.test(ts_w_MIS_S, alternative='s') # pvalue = 0.01
-tseries::kpss.test(ts_w_MIS_S)
-
-```
 
 It does not appear for the polyvalent fleet in the South that differentiation is necessary
 

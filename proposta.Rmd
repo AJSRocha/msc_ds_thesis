@@ -13,8 +13,10 @@ knitr::opts_chunk$set(echo = F, message = F, warning =F)
 library(forecast)
 #library(ggfortify); 
 library(gridExtra); #library(ggplotify)
+library(gridGraphics)
 library(tidyverse)
 library(wesanderson)
+
 
 #atencao ao carregar o ggfortify e o ggplotify, eles sao incompativeis com os metodos de autoplot e autolayer
 
