@@ -10,6 +10,9 @@ load('data/initial_data_occ_df.Rdata')
 
 # Step 1 - Time the pre-processing of the data - convert into time series
 
+package \textit{stats}
+package \textit{forecast}
+
 ```{r}
 a = Sys.time()
 ## Weekly
