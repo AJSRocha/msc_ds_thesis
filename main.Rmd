@@ -28,10 +28,10 @@ library(xtable)
 # Colour Schemes
 
 ```{r}
-col_otb_w  = wes_palette('Zissou1',4)[4]
-col_mis_w  = wes_palette('Zissou1',4)[3]
-col_otb_s  = wes_palette('Zissou1',4)[1]
-col_mis_s  = wes_palette('Zissou1',4)[2]
+col_mis_w  = wes_palette('Zissou1',4)[4]
+col_otb_w  = wes_palette('Zissou1',4)[3]
+col_mis_s  = wes_palette('Zissou1',4)[1]
+col_otb_s  = wes_palette('Zissou1',4)[2]
 ```
 
 
