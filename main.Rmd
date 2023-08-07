@@ -51,66 +51,6 @@ Função auxiliar que agrupa vd em regioes (S vs W) e cria as unidades temporais
 
 ```{r, include = F}
 
-# seasonador = function(x){
-#   mod = ifelse(as.numeric(as.character(x$year_sale)) == as.numeric(as.character(x$fishing_season)),
-#                0,
-#                1)
-#   week_start =paste0(as.numeric(as.character(x$year_sale))-mod, '-10-01') %>% 
-#     as.POSIXct(format = '%Y-%m-%d')
-#     res = difftime(x$IDATVEND, week_start, units = 'weeks') %>% trunc() + 1
-#     return(res)
-#   }
-# 
-# 
-# arranjador = function(df){
-#   temp = df %>%
-#     mutate(regiao = case_when(as.character(zona) %in% 
-#                               c('27.9.a.c.n', '27.9.a.c.s') ~ 'Costa Ocidental',
-#                             as.character(zona) == '27.9.a.s.a' ~ 'Costa Sul',
-#                             T ~ as.character(zona)),
-#            dia = weekdays(IDATVEND),
-#            semana = lubridate::isoweek(IDATVEND),
-#            semana_tot = paste(year_sale, semana %>% formatC(width = 2,
-#                                                             format = 'd',
-#                                                             flag = '0')),
-#            fishing_season = case_when(month_sale %in% c('10','11','12') ~
-#                                         as.numeric(as.character(year_sale)),
-#                                       T ~ as.numeric(as.character(year_sale)) - 1) %>% factor)
-#   return(temp)
-# }
-
-# Calcula numero de semanas desde o inicio do ano de calendario
-# semanador_y = function(x){
-#   week_start =paste0(as.numeric(as.character(x$year_sale)), '-01-01') %>%
-#     as.POSIXct(format = '%Y-%m-%d')
-#     res = (difftime(x$IDATVEND, week_start, units = 'days')/7 +1) %>% trunc()
-#     return(res)
-# }
-
-# Calcula numero de semanas desde o inicio da fishing season
-# semanador_fs = function(x){
-#   mod = ifelse(as.numeric(as.character(x$year_sale)) == as.numeric(as.character(x$fishing_season)),
-#                0,
-#                1)
-#   week_start =paste0(as.numeric(as.character(x$year_sale))-mod, '-10-01') %>% 
-#     as.POSIXct(format = '%Y-%m-%d')
-#     res = (difftime(x$IDATVEND, week_start, units = 'days')/7 +1) %>% trunc()
-#     return(res)
-#   }
-
-# arranjador = function(df){
-#   temp = df %>%
-#     mutate(regiao = case_when(as.character(zona) %in% 
-#                               c('27.9.a.c.n', '27.9.a.c.s') ~ 'Costa Ocidental',
-#                             as.character(zona) == '27.9.a.s.a' ~ 'Costa Sul',
-#                             T ~ as.character(zona)),
-#            dia = weekdays(IDATVEND),
-#           fishing_season = case_when(month_sale %in% c('10','11','12') ~
-#                                        as.numeric(as.character(year_sale)),
-#                                        T ~ as.numeric(as.character(year_sale)) - 1) %>% factor)
-#   return(temp)
-#}
-
 arranjador = function(df){
   temp = df %>%
     mutate(regiao = case_when(as.character(zona) %in% 
@@ -144,23 +84,37 @@ save(df, file = 'data/initial_data_occ_df.Rdata')
 
 ```
 
-Compila vendas-dia em series temporais
-
-
+# Cria DataFrames agregados com esforço calculado
 
 ```{r}
-## Série de desembarques frota artesanal - Costa Sul:
+a = Sys.time()
+df_y_MIS_W = df %>% 
+  filter(regiao == 'Costa Ocidental') %>%
+  filter(QVENDA > 0) %>% 
+  group_by(IEMBARCA, year_sale) %>% 
+  summarise(QVENDA_s = sum(QVENDA),
+            effort_s = n_distinct(IDATVEND)) %>% 
 
 
+  group_by(year_sale) %>% 
+  summarise(QVENDA = sum(QVENDA_s),
+            effort = sum(effort_s))
 
 
-# grid.arrange(
-# autoplot(ts_w_W) + theme_classic() + labs(title = 'Semanal'),
-# autoplot(ts_m_W) + theme_classic() + labs(title = 'Mensal'),
-# autoplot(ts_q_W) + theme_classic() + labs(title = 'Trimestral'),
-# autoplot(ts_y_W) + theme_classic() + labs(title = 'Anual'),
-# ncol = 2)
+b = Sys.time()
+df_effort_calc = b-a
 ```
+```{r}
+df_y_MIS_W %>% 
+ggplot() +
+  geom_line(aes(x = year_sale,
+                y = effort/max(effort),
+                group = 1)) + 
+  geom_line(aes(x = year_sale,
+                y = QVENDA/max(QVENDA),
+                group = 1),
+            color = col_mis_w) 
+a```
 
 
 ## Dados Biologicos
