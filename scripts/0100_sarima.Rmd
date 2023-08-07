@@ -5,7 +5,7 @@ output: html_notebook
 
 
 ```{r}
-load('data/initial_data_occ_df.Rdata')
+
 ```
 
 # Methodology

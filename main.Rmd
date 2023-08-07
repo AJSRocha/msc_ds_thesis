@@ -80,8 +80,8 @@ df = arranjador(vd)
 #   select(IDATVEND, year_sale, fishing_season, semana, semana_fs) %>%
 #   mutate(teste = semana_fs - semana) 
 
-save(df, file = 'data/initial_data_occ_df.Rdata')
-
+# save(df, file = 'data/initial_data_occ_df.Rdata')
+load('data/initial_data_occ_df.Rdata')
 ```
 
 # Cria DataFrames agregados com esforço calculado
@@ -110,7 +110,27 @@ df_y_OTB_W = df %>%
   summarise(QVENDA = sum(QVENDA_s),
             effort = sum(effort_s))
 
+df_y_MIS_S = df %>% 
+  filter(regiao == 'Costa Sul') %>%
+  filter(EGRUPART == 'MIS_MIS') %>% 
+  filter(QVENDA > 0) %>% 
+  group_by(IEMBARCA, year_sale) %>% 
+  summarise(QVENDA_s = sum(QVENDA),
+            effort_s = n_distinct(IDATVEND)) %>% 
+  group_by(year_sale) %>% 
+  summarise(QVENDA = sum(QVENDA_s),
+            effort = sum(effort_s))
 
+df_y_OTB_S = df %>% 
+  filter(regiao == 'Costa Sul') %>%
+  filter(EGRUPART == 'OTB') %>% 
+  filter(QVENDA > 0) %>% 
+  group_by(IEMBARCA, year_sale) %>% 
+  summarise(QVENDA_s = sum(QVENDA),
+            effort_s = n_distinct(IDATVEND)) %>% 
+  group_by(year_sale) %>% 
+  summarise(QVENDA = sum(QVENDA_s),
+            effort = sum(effort_s))
 
 b = Sys.time()
 df_effort_calc = b-a

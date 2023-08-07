@@ -20,7 +20,6 @@ library(reshape)
 ```
 
 
-
 ```{r}
 jbinput = build_jabba(catch = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
                                          'mis' = df_y_MIS_W$QVENDA,
@@ -44,7 +43,7 @@ jbinput = build_jabba(catch = data.frame('Year' = df_y_MIS_W$year_sale %>% as.nu
                       cpue = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
                                         'otb' = df_y_OTB_W$QVENDA/df_y_OTB_W$effort),
                       scenario = 'TestRun',
-                      model.type = 'Fox',
+                      model.type = c('Schaefer'), #model.type = c("Schaefer", "Fox", "Pella", "Pella_m"),
                       sigma.est = F,
                       fixed.obsE = 0.01)
 
@@ -63,12 +62,11 @@ bet_otb = fit_jabba(jbinput,
                     save.all = FALSE, # add complete posteriors to fitted object
                     save.jabba = FALSE, # saves jabba fit as rdata object
                     save.csvs = FALSE, # option to write csv outputs
-                    output.dir = 'jabba',
+                    output.dir = 'scripts/jabba',
                     quickmcmc = TRUE,
                     seed = 123,
                     jagsdir = NULL,
-                    verbose = TRUE,
-                    quickmcmc=TRUE)
+                    verbose = TRUE)
 
 ```
 
@@ -97,10 +95,6 @@ jbplot_logfits(bet1)
 
 JABBA requires a minimum of two input comma-separated value files (.csv) in the form of catch and abundance indices. The Catch input file contains the time series of year and catch by weight, aggregated across fleets for the entire fishery. Missing catch years or catch values are not allowed. JABBA is formulated to accommodate abundance indices from multiple sources (i.e., fleets) in a single cpue file, which contains all considered abundance indices. The first column of the cpue input is year, which must match the range of years provided in the Catch file. In contrast to the Catch input, missing abundance index values are allowed, such that different abundance indices may correspond to smaller portions of the catch time series. Optionally, an additional se input can be passed onto JABBA, containing standard error estimates associated with the abundance indices on a log scale. The se input is a third file, structurally identical to the cpue input. Alternatively, this feature can be used to apply different weighting to individual abundance indices by assigning varying coefficients of variation (CV) to each time series. If such weighting is implemented, it is advised that the CV chosen for each indexed year approximates the observed standard error on the log scale, such that the data weights are congruent with expectations as to how well the model should fit these data.
 
-
-```{r}
-load('data/initial_data_occ_df.Rdata')
-```
 
 ```{r, fig.width=20, fig.height=10}
 par(mfrow=c(3,2),mar = c(3.5, 3.5, 0.5, 0.1))
