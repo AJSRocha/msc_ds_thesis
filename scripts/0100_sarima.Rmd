@@ -30,7 +30,7 @@ ts_w_MIS_W = df %>%
   summarise(QVENDA = sum(QVENDA)) %>% 
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
-  select(QVENDA) %>% 
+  dplyr::select(QVENDA) %>% 
   ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
 
 ts_w_OTB_W = df %>%
@@ -39,7 +39,7 @@ ts_w_OTB_W = df %>%
   summarise(QVENDA = sum(QVENDA)) %>% 
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
-  select(QVENDA) %>% 
+  dplyr::select(QVENDA) %>% 
   ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
 
 
@@ -49,7 +49,7 @@ ts_w_MIS_S = df %>%
   summarise(QVENDA = sum(QVENDA)) %>% 
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
-  select(QVENDA) %>% 
+  dplyr::select(QVENDA) %>% 
   ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
 
 
@@ -59,7 +59,7 @@ ts_w_OTB_S = df %>%
   summarise(QVENDA = sum(QVENDA)) %>% 
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
-  select(QVENDA) %>% 
+  dplyr::select(QVENDA) %>% 
   ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
 
 
@@ -72,7 +72,7 @@ ts_y_MIS_W = df %>%
   summarise(QVENDA = sum(QVENDA)) %>% 
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
-  select(QVENDA) %>% 
+  dplyr::select(QVENDA) %>% 
   ts(start = c(1995), end= c(2022), frequency = 1)
 
 
@@ -82,7 +82,7 @@ ts_y_OTB_W = df %>%
   summarise(QVENDA = sum(QVENDA)) %>% 
   filter(regiao == 'Costa Ocidental') %>%
   ungroup() %>% 
-  select(QVENDA) %>% 
+  dplyr::select(QVENDA) %>% 
   ts(start = c(1995), end= c(2022), frequency = 1)
 
 ts_y_MIS_S = df %>%
@@ -91,7 +91,7 @@ ts_y_MIS_S = df %>%
   summarise(QVENDA = sum(QVENDA)) %>% 
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
-  select(QVENDA) %>% 
+  dplyr::select(QVENDA) %>% 
   ts(start = c(1995), end= c(2022), frequency = 1)
 
 ts_y_OTB_S = df %>%
@@ -100,7 +100,7 @@ ts_y_OTB_S = df %>%
   summarise(QVENDA = sum(QVENDA)) %>% 
   filter(regiao == 'Costa Sul') %>%
   ungroup() %>% 
-  select(QVENDA) %>% 
+  dplyr::select(QVENDA) %>% 
   ts(start = c(1995), end= c(2022), frequency = 1)
 
 
@@ -180,7 +180,6 @@ pacf(ts_w_OTB_W, col = col_otb_w, main = 'West OTB - Weekly - pACF', lwd = 5)
 
 grid.echo()
 fig = grid.grab()
-
 ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/res_boxjenkins_week_W_acf.png')
 ```
 
@@ -278,8 +277,12 @@ tab_estac = data.frame('fleet' = c('Polyvalent Fleet - West Coast - Weeks',
 # BoxCox.lambda(ts_w_MIS_S)
 # tseries::kpss.test(ts_w_MIS_S)
 
-print(xtable(tab_estac), type = "latex", file = "tables/res_estac.tex", only.contents = T)
-
+xtable(tab_estac) %>% 
+  print(.,
+        type = "latex",
+        file = "tables/res_estac.tex", 
+        include.rownames = F,
+        only.contents = T)
 ```
 
 

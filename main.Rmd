@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = F, message = F, warning =F)
 library(forecast)
 #library(ggfortify); 
 library(gridExtra); #library(ggplotify)
+library(gridGraphics)
 library(tidyverse)
 library(wesanderson)
 library(dplyr)
