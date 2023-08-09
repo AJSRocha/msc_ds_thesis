@@ -88,50 +88,105 @@ load('data/initial_data_occ_df.Rdata')
 # Cria DataFrames agregados com esforço calculado
 
 ```{r}
+
+a = Sys.time()
+df$ratio = df$QVENDA / df$QVENDA_total
+frota = data.frame(year_sale = character(0),IEMBARCA = character(0), polvicidade = numeric(0), catch = numeric(0))
+for(ano in unique(df$year_sale)){
+  temp = df %>% 
+    filter(year_sale == ano) %>% 
+    group_by(year_sale, IEMBARCA) %>% 
+    summarise(polvicidade = mean(ratio),
+              catch = sum(QVENDA))
+  
+  frota = rbind(frota, temp)
+  }
+
+b =Sys.time()
+preproc_ratios = b-a
+
+# save(frota, file = 'data/frota_ref.Rdata')
+load('data/frota_ref.Rdata')
+
+a = Sys.time()
+frota$ref =  TRUE
+df = df %>% left_join(
+  .,
+  frota,
+  by = c('year_sale', 'IEMBARCA'))
+
+b = Sys.time()
+
+preproc_add_frota_ref = b-a
+```
+
+# Sumario de dados usados 
+
+```{r}
+teste = 
+df %>% 
+  filter(!(EGRUPART == 'MIS_MIS' & is.na(ref)))
+```
+
+
+```{r}
 a = Sys.time()
 df_y_MIS_W = df %>% 
   filter(regiao == 'Costa Ocidental') %>%
   filter(EGRUPART == 'MIS_MIS') %>% 
-  filter(QVENDA > 0) %>% 
-  group_by(IEMBARCA, year_sale) %>% 
-  summarise(QVENDA_s = sum(QVENDA),
-            effort_s = n_distinct(IDATVEND)) %>% 
+  filter(ref) %>% 
   group_by(year_sale) %>% 
-  summarise(QVENDA = sum(QVENDA_s),
-            effort = sum(effort_s))
+  summarise(catch = sum(QVENDA),
+            effort = length(IDATVEND),
+            cpue = mean(QVENDA),
+            cpue_2 = median(QVENDA),
+            sd = sd(QVENDA)) 
 
-df_y_OTB_W = df %>% 
-  filter(regiao == 'Costa Ocidental') %>%
-  filter(EGRUPART == 'OTB') %>% 
-  filter(QVENDA > 0) %>% 
-  group_by(IEMBARCA, year_sale) %>% 
-  summarise(QVENDA_s = sum(QVENDA),
-            effort_s = n_distinct(IDATVEND)) %>% 
-  group_by(year_sale) %>% 
-  summarise(QVENDA = sum(QVENDA_s),
-            effort = sum(effort_s))
 
-df_y_MIS_S = df %>% 
-  filter(regiao == 'Costa Sul') %>%
-  filter(EGRUPART == 'MIS_MIS') %>% 
-  filter(QVENDA > 0) %>% 
-  group_by(IEMBARCA, year_sale) %>% 
-  summarise(QVENDA_s = sum(QVENDA),
-            effort_s = n_distinct(IDATVEND)) %>% 
-  group_by(year_sale) %>% 
-  summarise(QVENDA = sum(QVENDA_s),
-            effort = sum(effort_s))
+# df_y_MIS_W = df %>% 
+#   filter(regiao == 'Costa Ocidental') %>%
+#   filter(EGRUPART == 'MIS_MIS') %>% 
+#   filter(QVENDA > 0) %>% 
+#   group_by(IEMBARCA, year_sale) %>% 
+#   summarise(QVENDA_s = sum(QVENDA),
+#             effort_s = n_distinct(IDATVEND)) %>% 
+#   group_by(year_sale) %>% 
+#   summarise(QVENDA = sum(QVENDA_s),
+#             effort = sum(effort_s))
 
-df_y_OTB_S = df %>% 
-  filter(regiao == 'Costa Sul') %>%
-  filter(EGRUPART == 'OTB') %>% 
-  filter(QVENDA > 0) %>% 
-  group_by(IEMBARCA, year_sale) %>% 
-  summarise(QVENDA_s = sum(QVENDA),
-            effort_s = n_distinct(IDATVEND)) %>% 
-  group_by(year_sale) %>% 
-  summarise(QVENDA = sum(QVENDA_s),
-            effort = sum(effort_s))
+
+# df_y_OTB_W = df %>% 
+#   filter(regiao == 'Costa Ocidental') %>%
+#   filter(EGRUPART == 'OTB') %>% 
+#   filter(QVENDA > 0) %>% 
+#   group_by(IEMBARCA, year_sale) %>% 
+#   summarise(QVENDA_s = sum(QVENDA),
+#             effort_s = n_distinct(IDATVEND)) %>% 
+#   group_by(year_sale) %>% 
+#   summarise(QVENDA = sum(QVENDA_s),
+#             effort = sum(effort_s))
+# 
+# df_y_MIS_S = df %>% 
+#   filter(regiao == 'Costa Sul') %>%
+#   filter(EGRUPART == 'MIS_MIS') %>% 
+#   filter(QVENDA > 0) %>% 
+#   group_by(IEMBARCA, year_sale) %>% 
+#   summarise(QVENDA_s = sum(QVENDA),
+#             effort_s = n_distinct(IDATVEND)) %>% 
+#   group_by(year_sale) %>% 
+#   summarise(QVENDA = sum(QVENDA_s),
+#             effort = sum(effort_s))
+# 
+# df_y_OTB_S = df %>% 
+#   filter(regiao == 'Costa Sul') %>%
+#   filter(EGRUPART == 'OTB') %>% 
+#   filter(QVENDA > 0) %>% 
+#   group_by(IEMBARCA, year_sale) %>% 
+#   summarise(QVENDA_s = sum(QVENDA),
+#             effort_s = n_distinct(IDATVEND)) %>% 
+#   group_by(year_sale) %>% 
+#   summarise(QVENDA = sum(QVENDA_s),
+#             effort = sum(effort_s))
 
 b = Sys.time()
 df_effort_calc = b-a
