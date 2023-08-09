@@ -21,6 +21,141 @@ library("fitdistrplus")
 library(reshape)
 ```
 
+# Western Coast
+
+```{r}
+jbinput_w = build_jabba(catch = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
+                                         'mis' = df_y_MIS_W$QVENDA,
+                                         'otb' = df_y_OTB_W$QVENDA),
+                      cpue = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
+                                        'mis' = df_y_MIS_W$QVENDA/df_y_MIS_W$effort,
+                                        'otb' = df_y_OTB_W$QVENDA/df_y_OTB_W$effort),
+                      scenario = 'TestRun',
+                      model.type = 'Fox',
+                      sigma.est = F,
+                      fixed.obsE = 0.01)
+
+bet_total_w = fit_jabba(jbinput_w,
+                    ni = 30000, #number of iterations 
+                    nt = 5, # thinning interval of saved iterations
+                    nb = 5000, #burn-in
+                    nc = 2, #number of mcmc chains initial values
+                    init.values = FALSE, # 
+                    init.K = NULL,
+                    init.r = 0.81,
+                    init.q = NULL,
+                    peels = NULL, # NULL, # retro peel option
+                    do.ppc = TRUE, # conducts and saves posterior predictive checks
+                    save.trj = TRUE, # adds posteriors of stock, harvest and bk trajectories
+                    save.all = FALSE, # add complete posteriors to fitted object
+                    save.jabba = FALSE, # saves jabba fit as rdata object
+                    save.csvs = FALSE, # option to write csv outputs
+                    output.dir = 'scripts/jabba',
+                    quickmcmc = TRUE,
+                    seed = 123,
+                    jagsdir = NULL,
+                    verbose = TRUE)
+
+```
+
+```{r}
+xtable(bet_total_w$estimates) %>% 
+  print(.,
+        type = "latex",
+        file = "tables/res_jabba_est_w.tex", 
+        include.rownames = T,
+        only.contents = T)
+```
+
+```{r, fig.height=10, fig.width=10}
+jbplot_ppdist(bet_total_w, mfrow = c(2,4))
+
+grid.echo()
+fig = grid.grab()
+ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/resjabba_pardist_w.png')
+```
+
+```{r, fig.height=10, fig.width=10}
+
+# dev.new()
+png('plots/res_jabba_w.png', height = 10, width = 10, units = 'in', res = 300)
+par(mfrow = c(2,2), mar = c(5, 5, 5, 5))
+jbplot_trj(bet_total_w,type="BBmsy", add = T)
+jbplot_trj(bet_total_w,type="FFmsy", add = T)
+jbplot_kobe(bet_total_w, add = T)
+jbplot_spphase(bet_total_w, add = T)
+dev.off()
+```
+
+# Southern Coast
+
+```{r}
+jbinput_s = build_jabba(catch = data.frame('Year' = df_y_MIS_S$year_sale %>% as.numeric(),
+                                         'mis' = df_y_MIS_S$QVENDA,
+                                         'otb' = df_y_OTB_S$QVENDA),
+                      cpue = data.frame('Year' = df_y_MIS_S$year_sale %>% as.numeric(),
+                                        'mis' = df_y_MIS_S$QVENDA/df_y_MIS_S$effort,
+                                        'otb' = df_y_OTB_S$QVENDA/df_y_OTB_S$effort),
+                      scenario = 'TestRun',
+                      model.type = 'Fox',
+                      sigma.est = F,
+                      fixed.obsE = 0.01)
+
+bet_total_s = fit_jabba(jbinput_s,
+                    ni = 30000, #number of iterations 
+                    nt = 5, # thinning interval of saved iterations
+                    nb = 5000, #burn-in
+                    nc = 2, #number of mcmc chains initial values
+                    init.values = FALSE, # 
+                    init.K = NULL,
+                    init.r = 0.81,
+                    init.q = NULL,
+                    peels = NULL, # NULL, # retro peel option
+                    do.ppc = TRUE, # conducts and saves posterior predictive checks
+                    save.trj = TRUE, # adds posteriors of stock, harvest and bk trajectories
+                    save.all = FALSE, # add complete posteriors to fitted object
+                    save.jabba = FALSE, # saves jabba fit as rdata object
+                    save.csvs = FALSE, # option to write csv outputs
+                    output.dir = 'scripts/jabba',
+                    quickmcmc = TRUE,
+                    seed = 123,
+                    jagsdir = NULL,
+                    verbose = TRUE)
+
+```
+
+```{r}
+xtable(bet_total_s$estimates) %>% 
+  print(.,
+        type = "latex",
+        file = "tables/res_jabba_est_s.tex", 
+        include.rownames = T,
+        only.contents = T)
+```
+
+```{r, fig.height=10, fig.width=10}
+jbplot_ppdist(bet_total_s, mfrow = c(2,4))
+
+grid.echo()
+fig = grid.grab()
+ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/resjabba_pardist_s.png')
+```
+
+```{r, fig.height=10, fig.width=10}
+
+# dev.new()
+png('plots/res_jabba_s.png', height = 10, width = 10, units = 'in', res = 300)
+par(mfrow = c(2,2), mar = c(5, 5, 5, 5))
+jbplot_trj(bet_total_s,type="BBmsy", add = T)
+jbplot_trj(bet_total_s,type="FFmsy", add = T)
+jbplot_kobe(bet_total_s, add = T)
+jbplot_spphase(bet_total_s, add = T)
+dev.off()
+```
+
+# Separate Cases
+
+## West - MIS
 
 ```{r}
 jbinput = build_jabba(catch = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
@@ -62,10 +197,9 @@ xtable(bet_total$estimates) %>%
   print(.,
         type = "latex",
         file = "tables/res_jabba_est_w.tex", 
-        include.rownames = F,
+        include.rownames = T,
         only.contents = T)
 ```
-
 
 ```{r, fig.height=10, fig.width=10}
 jbplot_ppdist(bet_total, mfrow = c(2,4))
@@ -78,47 +212,37 @@ ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/resjabba_pardist_w.png')
 ```{r, fig.height=10, fig.width=10}
 
 # dev.new()
+png('plots/res_jabba_w.png', height = 10, width = 10, units = 'in', res = 300)
 par(mfrow = c(2,2), mar = c(5, 5, 5, 5))
 jbplot_trj(bet_total,type="BBmsy", add = T)
 jbplot_trj(bet_total,type="FFmsy", add = T)
 jbplot_kobe(bet_total, add = T)
 jbplot_spphase(bet_total, add = T)
-
-# grid.echo()
-fig = grid.grab()
-ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/res_jabba_w.png')
+dev.off()
 ```
 
-
-```{r, fig.width=20, fig.height=10}
-par(mfrow=c(3,2),mar = c(3.5, 3.5, 0.5, 0.1))
-jbplot_trj(bet_total,type="B",add=T)
-jbplot_trj(bet_total,type="F",add=T)
-jbplot_trj(bet_total,type="BBmsy",add=T)
-jbplot_trj(bet_total,type="FFmsy",add=T)
-jbplot_spphase(bet_total,add=T)
-jbplot_kobe(bet_total,add=T)
-```
-
+## West - OTB
 
 ```{r}
 jbinput = build_jabba(catch = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
+                                         'mis' = df_y_MIS_W$QVENDA,
                                          'otb' = df_y_OTB_W$QVENDA),
                       cpue = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
+                                        'mis' = df_y_MIS_W$QVENDA/df_y_MIS_W$effort,
                                         'otb' = df_y_OTB_W$QVENDA/df_y_OTB_W$effort),
                       scenario = 'TestRun',
-                      model.type = c('Schaefer'), #model.type = c("Schaefer", "Fox", "Pella", "Pella_m"),
+                      model.type = 'Fox',
                       sigma.est = F,
                       fixed.obsE = 0.01)
 
-bet_otb = fit_jabba(jbinput,
+bet_total = fit_jabba(jbinput,
                     ni = 30000, #number of iterations 
                     nt = 5, # thinning interval of saved iterations
                     nb = 5000, #burn-in
                     nc = 2, #number of mcmc chains initial values
                     init.values = FALSE, # 
                     init.K = NULL,
-                    init.r = NULL,
+                    init.r = 0.81,
                     init.q = NULL,
                     peels = NULL, # NULL, # retro peel option
                     do.ppc = TRUE, # conducts and saves posterior predictive checks
@@ -135,25 +259,246 @@ bet_otb = fit_jabba(jbinput,
 ```
 
 ```{r}
+xtable(bet_total$estimates) %>% 
+  print(.,
+        type = "latex",
+        file = "tables/res_jabba_est_w.tex", 
+        include.rownames = T,
+        only.contents = T)
+```
+
+```{r, fig.height=10, fig.width=10}
+jbplot_ppdist(bet_total, mfrow = c(2,4))
+
+grid.echo()
+fig = grid.grab()
+ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/resjabba_pardist_w.png')
+```
+
+```{r, fig.height=10, fig.width=10}
+
+# dev.new()
+png('plots/res_jabba_w.png', height = 10, width = 10, units = 'in', res = 300)
+par(mfrow = c(2,2), mar = c(5, 5, 5, 5))
+jbplot_trj(bet_total,type="BBmsy", add = T)
+jbplot_trj(bet_total,type="FFmsy", add = T)
+jbplot_kobe(bet_total, add = T)
+jbplot_spphase(bet_total, add = T)
+dev.off()
+```
+
+## South - MIS
+
+```{r}
 jbinput = build_jabba(catch = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
-                                         'mis' = df_y_MIS_W$QVENDA),
+                                         'mis' = df_y_MIS_W$QVENDA,
+                                         'otb' = df_y_OTB_W$QVENDA),
                       cpue = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
-                                        'mis' = df_y_MIS_W$QVENDA/df_y_MIS_W$effort),
+                                        'mis' = df_y_MIS_W$QVENDA/df_y_MIS_W$effort,
+                                        'otb' = df_y_OTB_W$QVENDA/df_y_OTB_W$effort),
                       scenario = 'TestRun',
                       model.type = 'Fox',
                       sigma.est = F,
                       fixed.obsE = 0.01)
 
-bet_mis = fit_jabba(jbinput,quickmcmc=TRUE)
+bet_total = fit_jabba(jbinput,
+                    ni = 30000, #number of iterations 
+                    nt = 5, # thinning interval of saved iterations
+                    nb = 5000, #burn-in
+                    nc = 2, #number of mcmc chains initial values
+                    init.values = FALSE, # 
+                    init.K = NULL,
+                    init.r = 0.81,
+                    init.q = NULL,
+                    peels = NULL, # NULL, # retro peel option
+                    do.ppc = TRUE, # conducts and saves posterior predictive checks
+                    save.trj = TRUE, # adds posteriors of stock, harvest and bk trajectories
+                    save.all = FALSE, # add complete posteriors to fitted object
+                    save.jabba = FALSE, # saves jabba fit as rdata object
+                    save.csvs = FALSE, # option to write csv outputs
+                    output.dir = 'scripts/jabba',
+                    quickmcmc = TRUE,
+                    seed = 123,
+                    jagsdir = NULL,
+                    verbose = TRUE)
+
+```
+
+```{r}
+xtable(bet_total$estimates) %>% 
+  print(.,
+        type = "latex",
+        file = "tables/res_jabba_est_w.tex", 
+        include.rownames = T,
+        only.contents = T)
+```
+
+```{r, fig.height=10, fig.width=10}
+jbplot_ppdist(bet_total, mfrow = c(2,4))
+
+grid.echo()
+fig = grid.grab()
+ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/resjabba_pardist_w.png')
+```
+
+```{r, fig.height=10, fig.width=10}
+
+# dev.new()
+png('plots/res_jabba_w.png', height = 10, width = 10, units = 'in', res = 300)
+par(mfrow = c(2,2), mar = c(5, 5, 5, 5))
+jbplot_trj(bet_total,type="BBmsy", add = T)
+jbplot_trj(bet_total,type="FFmsy", add = T)
+jbplot_kobe(bet_total, add = T)
+jbplot_spphase(bet_total, add = T)
+dev.off()
+```
+
+## South - OTB
+
+```{r}
+jbinput = build_jabba(catch = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
+                                         'mis' = df_y_MIS_W$QVENDA,
+                                         'otb' = df_y_OTB_W$QVENDA),
+                      cpue = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
+                                        'mis' = df_y_MIS_W$QVENDA/df_y_MIS_W$effort,
+                                        'otb' = df_y_OTB_W$QVENDA/df_y_OTB_W$effort),
+                      scenario = 'TestRun',
+                      model.type = 'Fox',
+                      sigma.est = F,
+                      fixed.obsE = 0.01)
+
+bet_total = fit_jabba(jbinput,
+                    ni = 30000, #number of iterations 
+                    nt = 5, # thinning interval of saved iterations
+                    nb = 5000, #burn-in
+                    nc = 2, #number of mcmc chains initial values
+                    init.values = FALSE, # 
+                    init.K = NULL,
+                    init.r = 0.81,
+                    init.q = NULL,
+                    peels = NULL, # NULL, # retro peel option
+                    do.ppc = TRUE, # conducts and saves posterior predictive checks
+                    save.trj = TRUE, # adds posteriors of stock, harvest and bk trajectories
+                    save.all = FALSE, # add complete posteriors to fitted object
+                    save.jabba = FALSE, # saves jabba fit as rdata object
+                    save.csvs = FALSE, # option to write csv outputs
+                    output.dir = 'scripts/jabba',
+                    quickmcmc = TRUE,
+                    seed = 123,
+                    jagsdir = NULL,
+                    verbose = TRUE)
+
+```
+
+```{r}
+xtable(bet_total$estimates) %>% 
+  print(.,
+        type = "latex",
+        file = "tables/res_jabba_est_w.tex", 
+        include.rownames = T,
+        only.contents = T)
+```
+
+```{r, fig.height=10, fig.width=10}
+jbplot_ppdist(bet_total, mfrow = c(2,4))
+
+grid.echo()
+fig = grid.grab()
+ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/resjabba_pardist_w.png')
+```
+
+```{r, fig.height=10, fig.width=10}
+
+# dev.new()
+png('plots/res_jabba_w.png', height = 10, width = 10, units = 'in', res = 300)
+par(mfrow = c(2,2), mar = c(5, 5, 5, 5))
+jbplot_trj(bet_total,type="BBmsy", add = T)
+jbplot_trj(bet_total,type="FFmsy", add = T)
+jbplot_kobe(bet_total, add = T)
+jbplot_spphase(bet_total, add = T)
+dev.off()
+```
+
+# Junk
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r, fig.width=20, fig.height=10}
+# par(mfrow=c(3,2),mar = c(3.5, 3.5, 0.5, 0.1))
+# jbplot_trj(bet_total,type="B",add=T)
+# jbplot_trj(bet_total,type="F",add=T)
+# jbplot_trj(bet_total,type="BBmsy",add=T)
+# jbplot_trj(bet_total,type="FFmsy",add=T)
+# jbplot_spphase(bet_total,add=T)
+# jbplot_kobe(bet_total,add=T)
+```
+
+```{r}
+# jbinput = build_jabba(catch = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
+#                                          'otb' = df_y_OTB_W$QVENDA),
+#                       cpue = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
+#                                         'otb' = df_y_OTB_W$QVENDA/df_y_OTB_W$effort),
+#                       scenario = 'TestRun',
+#                       model.type = c('Schaefer'), #model.type = c("Schaefer", "Fox", "Pella", "Pella_m"),
+#                       sigma.est = F,
+#                       fixed.obsE = 0.01)
+# 
+# bet_otb = fit_jabba(jbinput,
+#                     ni = 30000, #number of iterations 
+#                     nt = 5, # thinning interval of saved iterations
+#                     nb = 5000, #burn-in
+#                     nc = 2, #number of mcmc chains initial values
+#                     init.values = FALSE, # 
+#                     init.K = NULL,
+#                     init.r = NULL,
+#                     init.q = NULL,
+#                     peels = NULL, # NULL, # retro peel option
+#                     do.ppc = TRUE, # conducts and saves posterior predictive checks
+#                     save.trj = TRUE, # adds posteriors of stock, harvest and bk trajectories
+#                     save.all = FALSE, # add complete posteriors to fitted object
+#                     save.jabba = FALSE, # saves jabba fit as rdata object
+#                     save.csvs = FALSE, # option to write csv outputs
+#                     output.dir = 'scripts/jabba',
+#                     quickmcmc = TRUE,
+#                     seed = 123,
+#                     jagsdir = NULL,
+#                     verbose = TRUE)
+
+```
+
+```{r}
+# jbinput = build_jabba(catch = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
+#                                          'mis' = df_y_MIS_W$QVENDA),
+#                       cpue = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
+#                                         'mis' = df_y_MIS_W$QVENDA/df_y_MIS_W$effort),
+#                       scenario = 'TestRun',
+#                       model.type = 'Fox',
+#                       sigma.est = F,
+#                       fixed.obsE = 0.01)
+# 
+# bet_mis = fit_jabba(jbinput,quickmcmc=TRUE)
 ```
 
 
 
 ```{r}
-jbplot_catcherror(bet1)
-jbplot_ppdist(bet1)
-jbplot_cpuefits(bet1)
-jbplot_logfits(bet1)
+# jbplot_catcherror(bet1)
+# jbplot_ppdist(bet1)
+# jbplot_cpuefits(bet1)
+# jbplot_logfits(bet1)
 ```
 
 
@@ -165,23 +510,23 @@ JABBA requires a minimum of two input comma-separated value files (.csv) in the 
 
 
 ```{r, fig.width=20, fig.height=10}
-par(mfrow=c(3,2),mar = c(3.5, 3.5, 0.5, 0.1))
-jbplot_trj(bet_mis,type="B",add=T)
-jbplot_trj(bet_mis,type="F",add=T)
-jbplot_trj(bet_mis,type="BBmsy",add=T)
-jbplot_trj(bet_mis,type="FFmsy",add=T)
-jbplot_spphase(bet_mis,add=T)
-jbplot_kobe(bet_mis,add=T)
+# par(mfrow=c(3,2),mar = c(3.5, 3.5, 0.5, 0.1))
+# jbplot_trj(bet_mis,type="B",add=T)
+# jbplot_trj(bet_mis,type="F",add=T)
+# jbplot_trj(bet_mis,type="BBmsy",add=T)
+# jbplot_trj(bet_mis,type="FFmsy",add=T)
+# jbplot_spphase(bet_mis,add=T)
+# jbplot_kobe(bet_mis,add=T)
 ```
 
 ```{r, fig.width=20, fig.height=10}
-par(mfrow=c(2,2),mar = c(3.5, 3.5, 0.5, 0.1))
-jbplot_trj(bet_otb,type="B",add=T)
-jbplot_trj(bet_otb,type="F",add=T)
-# jbplot_trj(bet_otb,type="BBmsy",add=T)
-# jbplot_trj(bet_otb,type="FFmsy",add=T)
-jbplot_spphase(bet_otb,add=T)
-jbplot_kobe(bet_otb,add=T)
+# par(mfrow=c(2,2),mar = c(3.5, 3.5, 0.5, 0.1))
+# jbplot_trj(bet_otb,type="B",add=T)
+# jbplot_trj(bet_otb,type="F",add=T)
+# # jbplot_trj(bet_otb,type="BBmsy",add=T)
+# # jbplot_trj(bet_otb,type="FFmsy",add=T)
+# jbplot_spphase(bet_otb,add=T)
+# jbplot_kobe(bet_otb,add=T)
 ```
 
 
