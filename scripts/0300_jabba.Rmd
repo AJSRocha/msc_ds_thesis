@@ -19,17 +19,31 @@ library(rjags)
 library(R2jags)
 library("fitdistrplus")
 library(reshape)
+
+load(df, frota_cerco, file = 'data/initial_data_occ_df_limpo_ps.Rdata')
+```
+
+# Colour Schemes
+
+```{r}
+col_mis_w  = wes_palette('Zissou1',4)[4]
+col_otb_w  = wes_palette('Zissou1',4)[3]
+col_mis_s  = wes_palette('Zissou1',4)[1]
+col_otb_s  = wes_palette('Zissou1',4)[2]
 ```
 
 # Western Coast
 
 ```{r}
 jbinput_w = build_jabba(catch = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
-                                         'mis' = df_y_MIS_W$QVENDA,
-                                         'otb' = df_y_OTB_W$QVENDA),
+                                         'mis' = df_y_MIS_W$catch,
+                                         'otb' = df_y_OTB_W$catch),
                       cpue = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
-                                        'mis' = df_y_MIS_W$QVENDA/df_y_MIS_W$effort,
-                                        'otb' = df_y_OTB_W$QVENDA/df_y_OTB_W$effort),
+                                        'mis' = df_y_MIS_W$lpue_y,
+                                        'otb' = df_y_OTB_W$lpue_y),
+                      se = data.frame('Year' = df_y_MIS_W$year_sale %>% as.numeric(),
+                                        'mis' = log(df_y_MIS_W$sd/df_y_MIS_W$lpue_y),
+                                        'otb' = log(df_y_OTB_W$sd/df_y_OTB_W$lpue_y)),
                       scenario = 'TestRun',
                       model.type = 'Fox',
                       sigma.est = F,

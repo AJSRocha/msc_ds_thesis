@@ -82,7 +82,8 @@ df = arranjador(vd)
 #   mutate(teste = semana_fs - semana) 
 
 # save(df, file = 'data/initial_data_occ_df.Rdata')
-load('data/initial_data_occ_df.Rdata')
+# load('data/initial_data_occ_df.Rdata')
+# df$ratio = df$QVENDA / df$QVENDA_total
 ```
 
 # Cria DataFrames agregados com esforço calculado
@@ -90,7 +91,6 @@ load('data/initial_data_occ_df.Rdata')
 ```{r}
 
 a = Sys.time()
-df$ratio = df$QVENDA / df$QVENDA_total
 frota = data.frame(year_sale = character(0),IEMBARCA = character(0), polvicidade = numeric(0), catch = numeric(0))
 for(ano in unique(df$year_sale)){
   temp = df %>% 
@@ -103,45 +103,153 @@ for(ano in unique(df$year_sale)){
   }
 
 b =Sys.time()
-preproc_ratios = b-a
+preproc_ratios = b-a #Time difference of 1.617802 hours
 
 # save(frota, file = 'data/frota_ref.Rdata')
 load('data/frota_ref.Rdata')
 
 a = Sys.time()
-frota$ref =  TRUE
 df = df %>% left_join(
   .,
-  frota,
+  frota %>% 
+    mutate(ref = ifelse(polvicidade > 0.5, T, F)) %>% 
+    select(year_sale, IEMBARCA, ref),
   by = c('year_sale', 'IEMBARCA'))
 
-b = Sys.time()
+b = Sys.time() #Time difference of 1.227311 mins
 
-preproc_add_frota_ref = b-a
+preproc_add_frota_ref = b-a 
 ```
-
-# Sumario de dados usados 
 
 ```{r}
-teste = 
+fig =
 df %>% 
-  filter(!(EGRUPART == 'MIS_MIS' & is.na(ref)))
+  mutate(grupo = paste(regiao, EGRUPART)) %>% 
+  # head(10000) %>%
+  filter(EGRUPART %in% c('MIS_MIS', 'OTB')) %>%
+  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
+  ggplot() + 
+  geom_histogram(aes(x = ratio, fill = grupo)) + 
+  theme_light() + 
+  scale_fill_manual(values = c(col_mis_w,  col_otb_w,col_mis_s, col_otb_s)) + 
+  facet_wrap(grupo ~ ., ncol = 2, scales = 'free_y') +
+  theme(legend.position = 'none') + 
+  labs(x = 'octopus proportion')
+
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_preprop_ratios.png')
 ```
 
+# Limpeza 
 
 ```{r}
 a = Sys.time()
-df_y_MIS_W = df %>% 
+df =
+df %>% group_by(IEMBARCA) %>%
+mutate(EGRUPART = ifelse(is.na(EGRUPART),
+                           sort(EGRUPART, decreasing = F)[1],
+                           EGRUPART)) %>%
+  ungroup()
+b = Sys.time()
+
+df[is.na(df$EGRUPART),]$EGRUPART = "MIS_MIS"
+summary(df$EGRUPART %>% factor)
+
+save(df, df_effort, frota_cerco, file = 'data/initial_data_occ_df_limpo_ps.Rdata')
+
+frota_cerco = unique(df$IEMBARCA[df$EGRUPART == 'PS'])    
+
+load(df, frota_cerco, file = 'data/initial_data_occ_df_limpo_ps.Rdata')
+```
+
+```{r}
+df_effort= df %>%
+  filter(!IEMBARCA %in% frota_cerco) %>% 
+  filter(!(EGRUPART == 'MIS_MIS' & !ref)) %>% 
+  group_by(IEMBARCA, EGRUPART, regiao, year_sale) %>% 
+  summarise(QVENDA_s = sum(QVENDA),
+            esforco = length(IDATVEND)) %>% 
+  mutate(lpue = QVENDA_s/esforco)
+```
+
+# Estandardiza o esforço
+
+```{r}
+std = glm(lpue ~ EGRUPART + year_sale + regiao, data = df_effort, family = 'gaussian')
+predict(std)
+
+df_effort %>%
+  ungroup() %>% 
+  mutate(lpue_std = std$fitted.values) %>%
+  group_by(EGRUPART, regiao, year_sale) %>% 
+  summarise(lpue = mean(lpue),
+            lpue_std = mean(lpue_std)) %>%
+  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
+ggplot() + 
+  geom_line(aes(x = year_sale, y = lpue, group = 1)) +
+  geom_line(aes(x = year_sale, y = lpue_std, group = 1), col = 'red') +
+  facet_grid(regiao ~  EGRUPART)
+```
+
+# Cria os objectos
+
+```{r}
+a = Sys.time()
+df_y_MIS_W = df_effort %>% 
   filter(regiao == 'Costa Ocidental') %>%
   filter(EGRUPART == 'MIS_MIS') %>% 
-  filter(ref) %>% 
+  # filter(ref) %>% 
+  # group_by(IEMBARCA, year_sale) %>% 
+  # summarise(QVENDA_s = sum(QVENDA),
+  #           esforco = length(IDATVEND)) %>%
   group_by(year_sale) %>% 
-  summarise(catch = sum(QVENDA),
-            effort = length(IDATVEND),
-            cpue = mean(QVENDA),
-            cpue_2 = median(QVENDA),
-            sd = sd(QVENDA)) 
+  summarise(catch = sum(QVENDA_s),
+            effort = sum(esforco),
+            lpue_y = mean(lpue),
+            lpue_med = median(lpue),
+            sd = sd(lpue))
 
+
+df_y_OTB_W = df_effort %>% 
+  filter(regiao == 'Costa Ocidental') %>%
+  filter(EGRUPART == 'OTB') %>% 
+  # filter(ref) %>% 
+  # group_by(IEMBARCA, year_sale) %>% 
+  # summarise(QVENDA_s = sum(QVENDA),
+  #           esforco = length(IDATVEND)) %>%
+  group_by(year_sale) %>% 
+  summarise(catch = sum(QVENDA_s),
+            effort = sum(esforco),
+            lpue_y = mean(lpue),
+            lpue_med = median(lpue),
+            sd = sd(lpue))  
+
+df_y_MIS_S = df_effort %>% 
+  filter(regiao == 'Costa Sul') %>%
+  filter(EGRUPART == 'MIS') %>% 
+  # filter(ref) %>% 
+  # group_by(IEMBARCA, year_sale) %>% 
+  # summarise(QVENDA_s = sum(QVENDA),
+  #           esforco = length(IDATVEND)) %>%
+  group_by(year_sale) %>% 
+  summarise(catch = sum(QVENDA_s),
+            effort = sum(esforco),
+            lpue_y = mean(lpue),
+            lpue_med = median(lpue),
+            sd = sd(lpue))
+
+df_y_OTB_S = df_effort %>% 
+  filter(regiao == 'Costa Sul') %>%
+  filter(EGRUPART == 'OTB') %>% 
+  # filter(ref) %>% 
+  # group_by(IEMBARCA, year_sale) %>% 
+  # summarise(QVENDA_s = sum(QVENDA),
+  #           esforco = length(IDATVEND)) %>%
+  group_by(year_sale) %>% 
+  summarise(catch = sum(QVENDA_s),
+            effort = sum(esforco),
+            lpue_y = mean(lpue),
+            lpue_med = median(lpue),
+            sd = sd(lpue)) 
 
 # df_y_MIS_W = df %>% 
 #   filter(regiao == 'Costa Ocidental') %>%
@@ -196,12 +304,15 @@ df_effort_calc = b-a
 df_y_MIS_W %>% 
 ggplot() +
   geom_line(aes(x = year_sale,
-                y = effort/max(effort),
-                group = 1)) + 
+                y = lpue_y/max(lpue_y),
+                group = 1), col = 'blue') + 
   geom_line(aes(x = year_sale,
-                y = QVENDA/max(QVENDA),
+                y = catch/max(catch),
                 group = 1),
-            color = col_mis_w) 
+            color = 'red') + 
+  geom_line(aes(x = year_sale,
+                y = lpue_med/max(lpue_med),
+                group = 1), color = 'green')
 ```
 
 
