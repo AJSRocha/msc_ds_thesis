@@ -20,6 +20,11 @@ library(tidyverse)
 library(wesanderson)
 library(dplyr)
 library(xtable)
+# install.packages('tweedie')
+library(tweedie)
+library(emmeans)
+library(statmod)
+library(lsmeans)
 
 #atencao ao carregar o ggfortify e o ggplotify, eles sao incompativeis com os metodos de autoplot e autolayer
 
@@ -121,20 +126,27 @@ b = Sys.time() #Time difference of 1.227311 mins
 preproc_add_frota_ref = b-a 
 ```
 
+# Plot das proporcoes de OCC em cada viagem
+
 ```{r}
 fig =
 df %>% 
-  mutate(grupo = paste(regiao, EGRUPART)) %>% 
+  # mutate(grupo = paste(regiao, EGRUPART)) %>% 
   # head(10000) %>%
-  filter(EGRUPART %in% c('MIS_MIS', 'OTB')) %>%
-  filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
+   mutate(regiao = case_when(regiao == 'Costa Ocidental' ~ '1-Western Coast',
+                            T ~ '2-Southern Coast'),
+         EGRUPART = case_when(EGRUPART == 'MIS_MIS' ~ '1-Polyvalent',
+                            T ~ '2-Bottom Trawl'),
+         fill = paste(regiao, EGRUPART),) %>%
+  # filter(EGRUPART %in% c('MIS_MIS', 'OTB')) %>%
   ggplot() + 
-  geom_histogram(aes(x = ratio, fill = grupo)) + 
+  geom_histogram(aes(x = ratio, fill = fill)) + 
   theme_light() + 
   scale_fill_manual(values = c(col_mis_w,  col_otb_w,col_mis_s, col_otb_s)) + 
-  facet_wrap(grupo ~ ., ncol = 2, scales = 'free_y') +
+  facet_wrap(fill ~ ., ncol = 2, scales = 'free_y') +
   theme(legend.position = 'none') + 
-  labs(x = 'octopus proportion')
+  labs(x = 'octopus proportion', y = 'trips') 
+
 
 ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_preprop_ratios.png')
 ```
@@ -157,38 +169,149 @@ summary(df$EGRUPART %>% factor)
 save(df, df_effort, frota_cerco, file = 'data/initial_data_occ_df_limpo_ps.Rdata')
 
 frota_cerco = unique(df$IEMBARCA[df$EGRUPART == 'PS'])    
-
-load(df, frota_cerco, file = 'data/initial_data_occ_df_limpo_ps.Rdata')
 ```
 
 ```{r}
-df_effort= df %>%
+df_int= df %>%
   filter(!IEMBARCA %in% frota_cerco) %>% 
-  filter(!(EGRUPART == 'MIS_MIS' & !ref)) %>% 
+  filter(!(EGRUPART == 'MIS_MIS' & !ref)) %>%
+  filter(regiao != 'O')
+
+df_effort= df_int %>%
   group_by(IEMBARCA, EGRUPART, regiao, year_sale) %>% 
   summarise(QVENDA_s = sum(QVENDA),
             esforco = length(IDATVEND)) %>% 
   mutate(lpue = QVENDA_s/esforco)
+
+save(df, df_effort, df_int, frota_cerco, file = 'data/initial_data_occ_df_limpo_ps.Rdata')
+```
+
+# Começar aqui
+
+```{r}
+load(file = 'data/initial_data_occ_df_limpo_ps.Rdata')
+```
+
+```{r}
+sum(df_effort$esforco)
+```
+
+# Plot esforco por ano
+
+```{r}
+fig = 
+df_effort %>% 
+  mutate(fill = paste(regiao, EGRUPART),
+         regiao = case_when(regiao == 'Costa Ocidental' ~ '1-Western Coast',
+                            T ~ '2-Southern Coast'),
+         EGRUPART = case_when(EGRUPART == 'MIS_MIS' ~ '1-Polyvalent',
+                            T ~ '2-Bottom Trawl')) %>% 
+  ggplot() + 
+  geom_bar(aes(x = year_sale,
+               y = esforco,
+               fill = fill),
+           stat = 'identity') + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = 'none') +
+  labs(x = 'Year', y = 'Trips') + 
+  scale_fill_manual(values = c(col_mis_w,  col_otb_w,col_mis_s, col_otb_s)) + 
+  facet_grid(regiao ~ EGRUPART)
+
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_preprop_effort_year.png')
 ```
 
 # Estandardiza o esforço
 
+- CPUE nominal: simplesmente captura sobre unidade de esforço
+  lpue anual = media de captura de cada viagem/anual
+  esforço = nº de viagens
+  
+- CPUE standardizado: Esforco padronizado a uma frota de referencia
+(como?)
+
+
 ```{r}
-std = glm(lpue ~ EGRUPART + year_sale + regiao, data = df_effort, family = 'gaussian')
-predict(std)
+
+```
+
+
+```{r}
+a = Sys.time()
+out = tweedie.profile(QVENDA ~ EGRUPART + year_sale + month_sale + regiao + Power.Main,
+                      p.vec=seq(1.01, 1.9, length=9), link.power=0,
+                      data=df_int,
+                      method="interpolation",
+                      do.ci=TRUE, do.smooth=TRUE, do.plot=TRUE, phi.method="saddlepoint")
+b = Sys.time()
+
+a = Sys.time()
+std = glm(QVENDA ~ EGRUPART + year_sale + month_sale + regiao + Power.Main,
+          data = df_int, family = tweedie(var.power = out$p.max, link.power = 0))
+b = Sys.time() #59.48 segundos
+b-a
+
+
+ls.Model = lsmeans(std,  "year_sale")
+teste <- summary(ls.Model)$lsmeans[c("lsmean", "lower.CL", "upper.CL")]
+
+ls.Model = data.frame(ls.Model)
+lsmean<-scale(exp(ls.Model$lsmean),center = F,scale=T)
+SE<-scale(exp(ls.Model$SE),center = F,scale=T)
+asymp.LCL<-scale(exp(ls.Model$asymp.LCL),center = F,scale=T)
+asymp.UCL<-scale(exp(ls.Model$asymp.UCL),center = F,scale=T)
+
+```
+
+
+```{r}
+# std = glm(lpue ~ EGRUPART + year_sale + regiao, data = df_effort, family = 'gaussian')
 
 df_effort %>%
   ungroup() %>% 
-  mutate(lpue_std = std$fitted.values) %>%
+  # mutate(lpue_std = std$fitted.values) %>%
   group_by(EGRUPART, regiao, year_sale) %>% 
   summarise(lpue = mean(lpue),
             lpue_std = mean(lpue_std)) %>%
   filter(regiao %in% c('Costa Ocidental', 'Costa Sul')) %>% 
 ggplot() + 
   geom_line(aes(x = year_sale, y = lpue, group = 1)) +
-  geom_line(aes(x = year_sale, y = lpue_std, group = 1), col = 'red') +
+  # geom_line(aes(x = year_sale, y = lpue_std, group = 1), col = 'red') +
   facet_grid(regiao ~  EGRUPART)
 ```
+
+# Plot das series e lpue
+
+```{r}
+fig = 
+df_effort %>%
+  ungroup() %>% 
+  # mutate(lpue_std = std$fitted.values) %>% 
+  mutate(fill = paste(regiao, EGRUPART),
+         regiao = case_when(regiao == 'Costa Ocidental' ~ '1-Western Coast',
+                            T ~ '2-Southern Coast'),
+         EGRUPART = case_when(EGRUPART == 'MIS_MIS' ~ '1-Polyvalent',
+                            T ~ '2-Bottom Trawl')) %>% 
+  group_by(EGRUPART, regiao, year_sale, fill) %>% 
+  summarise(QVENDA = sum(QVENDA_s),
+            lpue = mean(lpue),
+            lpue_std = ls.Model) %>% 
+  ggplot() +
+  geom_line(aes(x = year_sale,
+                y = QVENDA,
+                group = 1,
+                color = fill)) + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = 'none') +
+  labs(x = 'Year', y = 'landings (kg)') + 
+  scale_color_manual(values = c(col_mis_w,  col_otb_w,col_mis_s, col_otb_s)) + 
+  facet_grid(regiao ~ EGRUPART, scales = 'free_y')
+
+fig
+```
+
+
 
 # Cria os objectos
 
