@@ -249,28 +249,99 @@ IEP_w = IEP_w %>%
 
 ```{r}
 a = Sys.time()
-out = tweedie.profile(QVENDA ~ EGRUPART + year_sale + month_sale + regiao + Power.Main,
+df_int = 
+df_int %>% group_by(EGRUPART, year_sale, regiao) %>%
+mutate(Power.Main=ifelse(is.na(Power.Main),median(Power.Main,na.rm=TRUE),Power.Main))
+
+out = tweedie.profile(QVENDA ~ EGRUPART + year_sale + factor(semana) + regiao + Power.Main,
                       p.vec=seq(1.01, 1.9, length=9), link.power=0,
                       data=df_int,
                       method="interpolation",
                       do.ci=TRUE, do.smooth=TRUE, do.plot=TRUE, phi.method="saddlepoint")
-b = Sys.time()
-
-a = Sys.time()
-std = glm(QVENDA ~ EGRUPART + year_sale + month_sale + regiao + Power.Main,
+# b = Sys.time()
+# 
+# a = Sys.time()
+std = glm(QVENDA ~ EGRUPART + year_sale + factor(semana) + regiao + Power.Main,
           data = df_int, family = tweedie(var.power = out$p.max, link.power = 0))
-b = Sys.time() #59.48 segundos
-b-a
+# b = Sys.time() #59.48 segundos
+# b-a
 
 
-ls.Model = lsmeans(std,  "year_sale")
-ls.Model = data.frame(ls.Model)
+ls.Model_y = lsmeans(std, c("year_sale","EGRUPART","regiao"))
+ls.Model_w = lsmeans(std, c('year_sale',"EGRUPART","regiao", 'semana'))
+
+ls.Model_y = data.frame(ls.Model_y)
+ls.Model_w = data.frame(ls.Model_w)
+
 
 lsmean<-scale(exp(ls.Model$lsmean),center = F,scale=T)
 SE<-scale(exp(ls.Model$SE),center = F,scale=T)
 asymp.LCL<-scale(exp(ls.Model$asymp.LCL),center = F,scale=T)
 asymp.UCL<-scale(exp(ls.Model$asymp.UCL),center = F,scale=T)
+b = Sys.time() 
+b-a # Time difference of 36.02784 mins
 ```
+
+# df_effort alterado
+
+```{r}
+
+df_int$pred = predict(std)
+
+df_effort_y =
+  df_int %>%
+  # mutate(predicoes = pred) %>% 
+  group_by(year_sale, EGRUPART, regiao) %>% 
+  summarise(catch = sum(QVENDA),
+            lpue_nom = mean(QVENDA),
+            lpue_2 = mean(pred),
+            effort = length(QVENDA),
+            sd_nom = sd(QVENDA)) %>% 
+  left_join(.,
+            ls.Model_y,
+            by = c('EGRUPART', 'year_sale','regiao')) %>% 
+  mutate(lpue_std = scale(exp(lsmean),center = F,scale=T),
+         sd_std = scale(exp(SE),center = F,scale=T),
+         asymp.LCL = scale(exp(asymp.LCL), center = F,scale=T),
+         asymp.UCL = scale(exp(asymp.UCL), center = F,scale=T)) %>% 
+  mutate(regiao = case_when(regiao == 'Costa Ocidental' ~ '1-Western Coast',
+                            T ~ '2-Southern Coast'),
+         EGRUPART = case_when(EGRUPART == 'MIS_MIS' ~ '1-Polyvalent',
+                            T ~ '2-Bottom Trawl'),
+         fill = paste(regiao, EGRUPART))
+
+df_effort_y
+```
+
+```{r}
+df_effort_y %>% 
+  ggplot() + 
+  geom_line(aes(x = year_sale, y = lpue_nom, group = fill, col = fill)) + 
+  theme(legend.position = 'bottom')
+
+df_effort_y %>% 
+  ggplot() + 
+  geom_line(aes(x = year_sale, y = lsmean, group = fill, col = fill)) + 
+  theme(legend.position = 'bottom')
+
+df_effort_y %>% 
+  ggplot() + 
+  geom_line(aes(x = year_sale, y = lpue_2, group = fill, col = fill)) + 
+  theme(legend.position = 'bottom')
+```
+
+
+
+```{r}
+ls.Model_w %>% 
+  ggplot() + 
+  geom_line(aes(x = semana,
+                y = lsmean,
+                group = year_sale))
+```
+
+
+
 
 
 ```{r}
