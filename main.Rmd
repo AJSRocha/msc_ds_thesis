@@ -192,6 +192,116 @@ save(df, df_effort, df_int, frota_cerco, file = 'data/initial_data_occ_df_limpo_
 load(file = 'data/initial_data_occ_df_limpo_ps.Rdata')
 ```
 
+* Começar com esforço nominal - 1 viagem
+
+* LPUE = lg/viagem
+
+* Ponderar esforço do arrasto com metodo do Hugo
+
+* Criar indice alternativo estandardizado com tweedie
+
+# Pondera esforço semanal e anual com metodologia do hugo
+
+```{r}
+IEP_y =
+df_int %>% 
+  mutate(esforco = 1) %>% 
+  group_by(year_sale, EGRUPART) %>% 
+  summarise(C_i = sum(QVENDA),
+            N_i = sum(esforco)) %>% 
+  mutate(e_i = C_i/N_i)
+
+E_arte_y = IEP_y %>% group_by(EGRUPART) %>% 
+  summarise(e_arte = sum(e_i)/28)
+
+E_arte_y = E_arte_y %>%
+  mutate(e_arte_r = e_arte/sum(e_arte))
+
+IEP_y = IEP_y %>%
+  mutate(
+    e_i_r = case_when(EGRUPART == 'OTB' ~ N_i * E_arte_y$e_arte_r[2],
+                      T ~ N_i * E_arte_y$e_arte_r[1]),
+    check = e_i_r/N_i)
+
+
+IEP_w =
+df_int %>% 
+  mutate(esforco = 1) %>% 
+  group_by(year_sale, semana, EGRUPART) %>% 
+  summarise(C_i = sum(QVENDA),
+            N_i = sum(esforco)) %>% 
+  mutate(e_i = C_i/N_i)
+
+E_arte_w = IEP_w %>% group_by(EGRUPART) %>% 
+  summarise(e_arte = sum(e_i)/28)
+
+E_arte_w = E_arte_w %>%
+  mutate(e_arte_r = e_arte/sum(e_arte))
+
+IEP_w = IEP_w %>%
+  mutate(
+    e_i_r = case_when(EGRUPART == 'OTB' ~ N_i * E_arte_w$e_arte_r[2],
+                      T ~ N_i * E_arte_w$e_arte_r[1]),
+    check = e_i_r/N_i)
+```
+
+# Standardiza com Tweedie
+
+```{r}
+a = Sys.time()
+out = tweedie.profile(QVENDA ~ EGRUPART + year_sale + month_sale + regiao + Power.Main,
+                      p.vec=seq(1.01, 1.9, length=9), link.power=0,
+                      data=df_int,
+                      method="interpolation",
+                      do.ci=TRUE, do.smooth=TRUE, do.plot=TRUE, phi.method="saddlepoint")
+b = Sys.time()
+
+a = Sys.time()
+std = glm(QVENDA ~ EGRUPART + year_sale + month_sale + regiao + Power.Main,
+          data = df_int, family = tweedie(var.power = out$p.max, link.power = 0))
+b = Sys.time() #59.48 segundos
+b-a
+
+
+ls.Model = lsmeans(std,  "year_sale")
+ls.Model = data.frame(ls.Model)
+
+lsmean<-scale(exp(ls.Model$lsmean),center = F,scale=T)
+SE<-scale(exp(ls.Model$SE),center = F,scale=T)
+asymp.LCL<-scale(exp(ls.Model$asymp.LCL),center = F,scale=T)
+asymp.UCL<-scale(exp(ls.Model$asymp.UCL),center = F,scale=T)
+```
+
+
+```{r}
+grid.arrange(
+IEP_y %>% 
+  ggplot() + 
+  geom_line(aes(x = year_sale, y = C_i/N_i, group = EGRUPART, color = EGRUPART)),
+
+IEP_y %>% 
+  ggplot() + 
+  geom_line(aes(x = year_sale, y = C_i/e_i_r, group = EGRUPART, color = EGRUPART)) + 
+  scale_color_manual(values = c('purple','green')),
+ncol=1)
+
+grid.arrange(
+IEP_w %>% 
+  mutate(x = paste(year_sale, semana)) %>% 
+  ggplot() + 
+  geom_line(aes(x = x, y = C_i/N_i, group = EGRUPART, color = EGRUPART)),
+
+IEP_w %>% 
+  mutate(x = paste(year_sale, semana)) %>% 
+  ggplot() + 
+
+  geom_line(aes(x = x, y = C_i/e_i_r, group = EGRUPART, color = EGRUPART)) + 
+  scale_color_manual(values = c('purple','green')),
+ncol=1)
+```
+
+
+
 ```{r}
 sum(df_effort$esforco)
 ```
@@ -231,37 +341,6 @@ ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/
 (como?)
 
 
-```{r}
-
-```
-
-
-```{r}
-a = Sys.time()
-out = tweedie.profile(QVENDA ~ EGRUPART + year_sale + month_sale + regiao + Power.Main,
-                      p.vec=seq(1.01, 1.9, length=9), link.power=0,
-                      data=df_int,
-                      method="interpolation",
-                      do.ci=TRUE, do.smooth=TRUE, do.plot=TRUE, phi.method="saddlepoint")
-b = Sys.time()
-
-a = Sys.time()
-std = glm(QVENDA ~ EGRUPART + year_sale + month_sale + regiao + Power.Main,
-          data = df_int, family = tweedie(var.power = out$p.max, link.power = 0))
-b = Sys.time() #59.48 segundos
-b-a
-
-
-ls.Model = lsmeans(std,  "year_sale")
-teste <- summary(ls.Model)$lsmeans[c("lsmean", "lower.CL", "upper.CL")]
-
-ls.Model = data.frame(ls.Model)
-lsmean<-scale(exp(ls.Model$lsmean),center = F,scale=T)
-SE<-scale(exp(ls.Model$SE),center = F,scale=T)
-asymp.LCL<-scale(exp(ls.Model$asymp.LCL),center = F,scale=T)
-asymp.UCL<-scale(exp(ls.Model$asymp.UCL),center = F,scale=T)
-
-```
 
 
 ```{r}
@@ -310,8 +389,6 @@ df_effort %>%
 
 fig
 ```
-
-
 
 # Cria os objectos
 
