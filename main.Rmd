@@ -34,10 +34,10 @@ library(lsmeans)
 # Colour Schemes
 
 ```{r}
-col_mis_w  = wes_palette('Zissou1',4)[4]
-col_otb_w  = wes_palette('Zissou1',4)[3]
-col_mis_s  = wes_palette('Zissou1',4)[1]
-col_otb_s  = wes_palette('Zissou1',4)[2]
+col_mis_w  = wes_palette('Zissou1',4)[1]
+col_mis_s  = wes_palette('Zissou1',4)[3]                  
+col_otb_w  = wes_palette('Zissou1',4)[2]
+col_otb_s  = wes_palette('Zissou1',4)[4]
 ```
 
 
@@ -209,6 +209,20 @@ df_effort_y =
                             T ~ '2-Bottom Trawl'),
          fill = paste(regiao, EGRUPART))
 
+df_effort_m =
+  df_int %>%
+  # mutate(predicoes = pred) %>% 
+  group_by(year_sale, month_sale, EGRUPART, regiao) %>% 
+  summarise(catch = sum(QVENDA),
+            lpue = mean(QVENDA),
+            effort = length(QVENDA),
+            sd = sd(QVENDA)) %>%
+  mutate(regiao = case_when(regiao == 'Costa Ocidental' ~ '1-Western Coast',
+                            T ~ '2-Southern Coast'),
+         EGRUPART = case_when(EGRUPART == 'MIS_MIS' ~ '1-Polyvalent',
+                            T ~ '2-Bottom Trawl'),
+         fill = paste(regiao, EGRUPART))
+
 df_effort_w =
   df_int %>%
   # mutate(predicoes = pred) %>% 
@@ -224,8 +238,9 @@ df_effort_w =
          fill = paste(regiao, EGRUPART))
 
 
-save(df_int, df_effort_y, df_effort_w, file = 'data/initial_data_occ_df_final.Rdata')
+save(df_int, df_effort_y, df_effort_m, df_effort_w, file = 'data/initial_data_occ_df_final.Rdata')
 ```
+
 # ESFORÇO
 
 * Começar com esforço nominal - 1 viagem

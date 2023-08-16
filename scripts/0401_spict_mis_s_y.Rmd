@@ -1,0 +1,86 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(spict)
+load('data/initial_data_occ_df_final.Rdata')
+```
+
+# Preproc
+
+```{r}
+a = Sys.time()
+
+temp = df_effort_y %>% 
+  filter(fill == '2-Southern Coast 1-Polyvalent')
+
+timeC = temp$year_sale %>% as.character %>% as.numeric()
+timeI = temp$year_sale %>% as.character %>% as.numeric()
+obsC = temp$catch
+obsI = temp$lpue
+
+modelo_spict = list(timeC = timeC,
+                    timeI = timeC,
+                    obsC = obsC,
+                    obsI = obsI)
+
+modelo_spict$priors$logbkfrac <- c(log(0.8),0.5,1)
+modelo_spict$ini$logn <- log(2) #adjust production curve to Shaefer
+modelo_spict$phases$logn <- -1
+modelo_spict$priors$logalpha <- c(1, 1, 0)
+modelo_spict$priors$logbeta <- c(1, 1, 0)
+
+b = Sys.time()
+spict_preproc_mis_s_y = b-a
+```
+
+# Fit
+
+```{r}
+a = Sys.time()
+
+res_spict = fit.spict(modelo_spict)
+retro_res = retro(res_spict)
+
+b = Sys.time()
+spict_fit_mis_s_y = b-a
+```
+
+# Render Outputs
+
+```{r}
+a = Sys.time()
+
+png('plots/res_spict_data_mis_s_y.png', height = 10, width = 10, units = 'in', res = 300)
+plotspict.data(res_spict)
+dev.off()
+
+png('plots/res_spict_res_mis_s_y.png', height = 10, width = 10, units = 'in', res = 300)
+par(mfrow = c(2,2))
+plotspict.bbmsy(res_spict)
+plotspict.ffmsy(res_spict)
+plotspict.fb(res_spict)
+plotspict.production(res_spict, n.plotyears = 40)
+dev.off()
+
+png('plots/res_spict_retro_mis_s_y.png', height = 10, width = 10, units = 'in', res = 300)
+plotspict.retro(retro_res)
+dev.off()
+
+b = Sys.time()
+spict_render_mis_s_y = b-a
+```
+
+# Performance 
+
+```{r}
+perf_spict_s_mis_y = data.frame('Framework' = 'SPiCT - Polivalent, Southern Coast, Yearly data',
+                              'Pre-process' = spict_preproc_mis_s_y,
+                              'Model fit' = spict_fit_mis_s_y,
+                              'Output Render' = spict_render_mis_s_y)
+save(perf_spict_s_mis_y, file = 'benchmarks/spict_mis_s_y.Rdata')
+```
+
+
