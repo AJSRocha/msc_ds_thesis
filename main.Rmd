@@ -192,6 +192,42 @@ save(df, df_effort, df_int, frota_cerco, file = 'data/initial_data_occ_df_limpo_
 load(file = 'data/initial_data_occ_df_limpo_ps.Rdata')
 ```
 
+# Esforço nominal - desistimos do resto
+
+```{r}
+df_effort_y =
+  df_int %>%
+  # mutate(predicoes = pred) %>% 
+  group_by(year_sale, EGRUPART, regiao) %>% 
+  summarise(catch = sum(QVENDA),
+            lpue = mean(QVENDA),
+            effort = length(QVENDA),
+            sd = sd(QVENDA)) %>%
+  mutate(regiao = case_when(regiao == 'Costa Ocidental' ~ '1-Western Coast',
+                            T ~ '2-Southern Coast'),
+         EGRUPART = case_when(EGRUPART == 'MIS_MIS' ~ '1-Polyvalent',
+                            T ~ '2-Bottom Trawl'),
+         fill = paste(regiao, EGRUPART))
+
+df_effort_w =
+  df_int %>%
+  # mutate(predicoes = pred) %>% 
+  group_by(year_sale, semana, EGRUPART, regiao) %>% 
+  summarise(catch = sum(QVENDA),
+            lpue = mean(QVENDA),
+            effort = length(QVENDA),
+            sd = sd(QVENDA)) %>%
+  mutate(regiao = case_when(regiao == 'Costa Ocidental' ~ '1-Western Coast',
+                            T ~ '2-Southern Coast'),
+         EGRUPART = case_when(EGRUPART == 'MIS_MIS' ~ '1-Polyvalent',
+                            T ~ '2-Bottom Trawl'),
+         fill = paste(regiao, EGRUPART))
+
+
+save(df_int, df_effort_y, df_effort_w, file = 'data/initial_data_occ_df_final.Rdata')
+```
+# ESFORÇO
+
 * Começar com esforço nominal - 1 viagem
 
 * LPUE = lg/viagem
@@ -203,46 +239,46 @@ load(file = 'data/initial_data_occ_df_limpo_ps.Rdata')
 # Pondera esforço semanal e anual com metodologia do hugo
 
 ```{r}
-IEP_y =
-df_int %>% 
-  mutate(esforco = 1) %>% 
-  group_by(year_sale, EGRUPART) %>% 
-  summarise(C_i = sum(QVENDA),
-            N_i = sum(esforco)) %>% 
-  mutate(e_i = C_i/N_i)
-
-E_arte_y = IEP_y %>% group_by(EGRUPART) %>% 
-  summarise(e_arte = sum(e_i)/28)
-
-E_arte_y = E_arte_y %>%
-  mutate(e_arte_r = e_arte/sum(e_arte))
-
-IEP_y = IEP_y %>%
-  mutate(
-    e_i_r = case_when(EGRUPART == 'OTB' ~ N_i * E_arte_y$e_arte_r[2],
-                      T ~ N_i * E_arte_y$e_arte_r[1]),
-    check = e_i_r/N_i)
-
-
-IEP_w =
-df_int %>% 
-  mutate(esforco = 1) %>% 
-  group_by(year_sale, semana, EGRUPART) %>% 
-  summarise(C_i = sum(QVENDA),
-            N_i = sum(esforco)) %>% 
-  mutate(e_i = C_i/N_i)
-
-E_arte_w = IEP_w %>% group_by(EGRUPART) %>% 
-  summarise(e_arte = sum(e_i)/28)
-
-E_arte_w = E_arte_w %>%
-  mutate(e_arte_r = e_arte/sum(e_arte))
-
-IEP_w = IEP_w %>%
-  mutate(
-    e_i_r = case_when(EGRUPART == 'OTB' ~ N_i * E_arte_w$e_arte_r[2],
-                      T ~ N_i * E_arte_w$e_arte_r[1]),
-    check = e_i_r/N_i)
+# IEP_y =
+# df_int %>% 
+#   mutate(esforco = 1) %>% 
+#   group_by(year_sale, EGRUPART) %>% 
+#   summarise(C_i = sum(QVENDA),
+#             N_i = sum(esforco)) %>% 
+#   mutate(e_i = C_i/N_i)
+# 
+# E_arte_y = IEP_y %>% group_by(EGRUPART) %>% 
+#   summarise(e_arte = sum(e_i)/28)
+# 
+# E_arte_y = E_arte_y %>%
+#   mutate(e_arte_r = e_arte/sum(e_arte))
+# 
+# IEP_y = IEP_y %>%
+#   mutate(
+#     e_i_r = case_when(EGRUPART == 'OTB' ~ N_i * E_arte_y$e_arte_r[2],
+#                       T ~ N_i * E_arte_y$e_arte_r[1]),
+#     check = e_i_r/N_i)
+# 
+# 
+# IEP_w =
+# df_int %>% 
+#   mutate(esforco = 1) %>% 
+#   group_by(year_sale, semana, EGRUPART) %>% 
+#   summarise(C_i = sum(QVENDA),
+#             N_i = sum(esforco)) %>% 
+#   mutate(e_i = C_i/N_i)
+# 
+# E_arte_w = IEP_w %>% group_by(EGRUPART) %>% 
+#   summarise(e_arte = sum(e_i)/28)
+# 
+# E_arte_w = E_arte_w %>%
+#   mutate(e_arte_r = e_arte/sum(e_arte))
+# 
+# IEP_w = IEP_w %>%
+#   mutate(
+#     e_i_r = case_when(EGRUPART == 'OTB' ~ N_i * E_arte_w$e_arte_r[2],
+#                       T ~ N_i * E_arte_w$e_arte_r[1]),
+#     check = e_i_r/N_i)
 ```
 
 # Standardiza com Tweedie
@@ -253,16 +289,36 @@ df_int =
 df_int %>% group_by(EGRUPART, year_sale, regiao) %>%
 mutate(Power.Main=ifelse(is.na(Power.Main),median(Power.Main,na.rm=TRUE),Power.Main))
 
-out = tweedie.profile(QVENDA ~ EGRUPART + year_sale + factor(semana) + regiao + Power.Main,
+df_int_mis_w = df_int %>% 
+  filter(EGRUPART == 'MIS_MIS') %>% 
+  filter(regiao == 'Costa Ocidental')
+
+df_int_mis_s = df_int %>% 
+  filter(EGRUPART == 'MIS_MIS') %>% 
+  filter(regiao == 'Costa Sul')
+
+
+out_mis_w = tweedie.profile(QVENDA ~ year_sale + factor(semana) +  Power.Main + QVENDA_total,
                       p.vec=seq(1.01, 1.9, length=9), link.power=0,
-                      data=df_int,
+                      data=df_int_mis_w,
+                      method="interpolation",
+                      do.ci=TRUE, do.smooth=TRUE, do.plot=TRUE, phi.method="saddlepoint")
+
+out_mis_s = tweedie.profile(QVENDA ~ year_sale + factor(semana) +  Power.Main + QVENDA_total,
+                      p.vec=seq(1.01, 1.9, length=9), link.power=0,
+                      data=df_int_mis_s,
                       method="interpolation",
                       do.ci=TRUE, do.smooth=TRUE, do.plot=TRUE, phi.method="saddlepoint")
 # b = Sys.time()
+
+# b = Sys.time()
 # 
 # a = Sys.time()
-std = glm(QVENDA ~ EGRUPART + year_sale + factor(semana) + regiao + Power.Main,
-          data = df_int, family = tweedie(var.power = out$p.max, link.power = 0))
+std_mis_w = glm(QVENDA ~  year_sale + factor(semana) +  Power.Main + QVENDA_total,
+          data = df_int_mis_w, family = tweedie(var.power = out_mis_w$p.max, link.power = 0))
+
+std_mis_s = glm(QVENDA ~  year_sale + factor(semana) +  Power.Main + QVENDA_total,
+          data = df_int_mis_s, family = tweedie(var.power = out_mis_s$p.max, link.power = 0))
 # b = Sys.time() #59.48 segundos
 # b-a
 
