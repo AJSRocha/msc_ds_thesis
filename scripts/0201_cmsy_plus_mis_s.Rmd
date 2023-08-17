@@ -14,9 +14,16 @@ library(mvtnorm)
 library(snpar)
 library(neuralnet)
 library(conicfit)
+load('data/initial_data_occ_df_final.Rdata')
 ```
 
+Usando o ficheiro do algarve_mis_mis que sobrou do spict, criar os csv necssarios para o CSMY++
+Alguns priors foram tirandos de
+ https://www.sealifebase.se/summary/Octopus-vulgaris.html
+ 
 ```{r}
+a = Sys.time()
+
 # set.seed(999) # use for comparing results between runs
 # rm(list=ls(all=FALSE)) # clear previous variables etc
 options(digits=3) # displays all numbers with three significant digits as default
@@ -24,15 +31,10 @@ options(digits=3) # displays all numbers with three significant digits as defaul
 FullSchaefer = F    # initialize variable; automatically set to TRUE if enough abundance data are available
 n.chains     = 2 # number of chains to be used in JAGS, default = 2
 # setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # set working directory to source file location
-```
 
-Usando o ficheiro do algarve_mis_mis que sobrou do spict, criar os csv necssarios para o CSMY++
-Alguns priors foram tirandos de https://www.sealifebase.se/summary/Octopus-vulgaris.html
-
-```{r}
 # Continent,Region,Subregion,Stock,Group,Name,ScientificName,SpecCode,Source,MinOfYear,MaxOfYear,StartYear,EndYear,Flim,Fpa,Blim,Bpa,Bmsy,MSYBtrigger,Fmsy,last_F,Resilience,r.low,r.hi,stb.low,stb.hi,int.yr,intb.low,intb.hi,endb.low,endb.hi,btype,e.creep,force.cmsy,Comments,
 
-load('data/initial_data_occ_df_final.Rdata')
+
 
 id = data.frame(Continent = 'Europe',
                 Region = 'Iberia',
@@ -82,11 +84,7 @@ stocks = "2-Southern Coast 1-Polyvalent"
 # If the input files contain more than one stock, specify below the stock to be analyzed
 # If the line below is commented out (#), all stocks in the input file will be analyzed
 # stocks <-"Blacknose shark - Atlantic"  #"Alop_sup_Indian"  #"Acadian redfish - Gulf of Maine / Georges Bank"# "Hogfish - Florida Keys / East Florida"  #"Splitnose rockfish - Pacific Coast"  #"Acadian_redfish"  # "ple.27.7d" #"cod.27.1-2coast"#"cod.27.7e-k" # "Acadian redfish - Gulf of Maine / Georges Bank"  #c("Greenspotted rockfish - Pacific Coast")
-```
 
-Parametros iniciais e funçoes necessarias a analise
-
-```{r}
 #-----------------------------------------
 # General settings for the analysis ----
 #-----------------------------------------
@@ -359,12 +357,14 @@ traceEllipse<-function(rs,ks,prior.r,prior.k){
 #---------------------------------------------
 # END OF FUNCTIONS
 #---------------------------------------------
+
+b = Sys.time()
+perf_cmsy_preproc_mis_s = b-a  
   
-```
 
+total_i = Sys.time()
+time_i = Sys.time()
 
-
-```{r}
 cat("-------------------------------------------\n")
 cat("CMSY++ Analysis,", date(),"\n")
 cat("-------------------------------------------\n")
@@ -422,9 +422,7 @@ cinfo = id
 id_file = 'train_occ' #artificio para ultrapassar a distincao train/sim que o script faz abaixo
 load(file = nn_file) # load neural network file
 # cat("Files", catch, ",", id,",",nn_file,"read successfully","\n")
-```
 
-```{r}
 #---------------------------------
 # Analyze stock(s)
 #---------------------------------
@@ -1304,6 +1302,11 @@ for(stock in stocks) {
   cat("Comment:", comment,"\n")
   cat("----------------------------------------------------------\n")
 
+    time_f = Sys.time()
+  perf_cmsy_fit_mis_s = time_f - time_i
+  
+  time_i = Sys.time()
+  
   # -----------------------------------------
   # Plot results ----
   # -----------------------------------------
@@ -2445,8 +2448,16 @@ for(stock in stocks) {
 	} #retrospective analysis plots - end
 
 } # end of stocks loop
-time_cmsy_f = Sys.time()
-time_cmsy_f-time_cmsy_i
+time_f = Sys.time()
+perf_cmsy_render_mis_s = time_f - time_i
+check = time_f - total_i
 ```
 
+```{r}
+perf_cmsy_s_mis = data.frame('Framework' = 'CMSY++ - Polyvalent, Southern Coast, Yearly data',
+                              'Pre-process' = perf_cmsy_preproc_mis_s,
+                              'Model fit' = perf_cmsy_fit_mis_s,
+                              'Output Render' = check - perf_cmsy_fit_mis_s)
+save(perf_cmsy_s_mis, file = 'benchmarks/cmsy_mis_s_y.Rdata')
+```
 

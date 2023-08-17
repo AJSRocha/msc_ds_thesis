@@ -4,9 +4,9 @@ output: html_notebook
 ---
 
 ```{r}
-list.of.packages <- c("R2jags","coda","parallel","foreach","doParallel","gplots","mvtnorm","snpar","neuralnet","conicfit")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
+# list.of.packages <- c("R2jags","coda","parallel","foreach","doParallel","gplots","mvtnorm","snpar","neuralnet","conicfit")
+# new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+# if(length(new.packages)) install.packages(new.packages)
 library(R2jags)  # Interface with JAGS
 library(coda)
 library(gplots)
@@ -14,9 +14,15 @@ library(mvtnorm)
 library(snpar)
 library(neuralnet)
 library(conicfit)
+load('data/initial_data_occ_df_final.Rdata')
 ```
 
+Usando o ficheiro do algarve_mis_mis que sobrou do spict, criar os csv necssarios para o CSMY++
+Alguns priors foram tirandos de https://www.sealifebase.se/summary/Octopus-vulgaris.html
+
 ```{r}
+a = Sys.time()
+
 # set.seed(999) # use for comparing results between runs
 # rm(list=ls(all=FALSE)) # clear previous variables etc
 options(digits=3) # displays all numbers with three significant digits as default
@@ -24,18 +30,15 @@ options(digits=3) # displays all numbers with three significant digits as defaul
 FullSchaefer = F    # initialize variable; automatically set to TRUE if enough abundance data are available
 n.chains     = 2 # number of chains to be used in JAGS, default = 2
 # setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # set working directory to source file location
-```
 
-Usando o ficheiro do algarve_mis_mis que sobrou do spict, criar os csv necssarios para o CSMY++
-Alguns priors foram tirandos de https://www.sealifebase.se/summary/Octopus-vulgaris.html
-
-```{r}
 # Continent,Region,Subregion,Stock,Group,Name,ScientificName,SpecCode,Source,MinOfYear,MaxOfYear,StartYear,EndYear,Flim,Fpa,Blim,Bpa,Bmsy,MSYBtrigger,Fmsy,last_F,Resilience,r.low,r.hi,stb.low,stb.hi,int.yr,intb.low,intb.hi,endb.low,endb.hi,btype,e.creep,force.cmsy,Comments,
+
+
 
 id = data.frame(Continent = 'Europe',
                 Region = 'Iberia',
                 Subregion = 'Portugal',
-                Stock = 'occ.27.9.a.s.a.mis',
+                Stock = '1-Western Coast 1-Polyvalent',
                 Group = 'Cephalopoda',
                 Name = 'Octopus',
                 ScientificName = 'Octopus vulgaris',
@@ -67,23 +70,24 @@ id = data.frame(Continent = 'Europe',
                 force.cmsy = FALSE,
                 Comment = '')
 
-catch = data.frame(Stock = rep('occ.27.9.a.s.a.mis', nrow(effort_ns)),
-                   yr = effort_ns$year_sale %>% as.character() %>% as.numeric(),
-                   ct = effort_ns$catch/1000,
-                   bt = effort_ns$effort)
+catch = data.frame(Stock = df_effort_y$fill,
+  # Stock = rep('occ.27.9.a.s.a.mis', nrow(effort_ns)),
+                   yr = df_effort_y$year_sale %>% as.character() %>% as.numeric(),
+                   ct = df_effort_y$catch/1000,
+                   bt = df_effort_y$effort)
 
 nn_file     =  "scripts/CMSY++/ffnn.bin" # file containing neural networks trained to estimate B/k priors
 outfile     = paste("Out_",format(Sys.Date(),format="%B%d%Y_"),'text_goes_here',sep="") # default name for output file
 
-stocks      ='occ.27.9.a.s.a.mis'
+stocks = "1-Western Coast 1-Polyvalent"
 # If the input files contain more than one stock, specify below the stock to be analyzed
 # If the line below is commented out (#), all stocks in the input file will be analyzed
 # stocks <-"Blacknose shark - Atlantic"  #"Alop_sup_Indian"  #"Acadian redfish - Gulf of Maine / Georges Bank"# "Hogfish - Florida Keys / East Florida"  #"Splitnose rockfish - Pacific Coast"  #"Acadian_redfish"  # "ple.27.7d" #"cod.27.1-2coast"#"cod.27.7e-k" # "Acadian redfish - Gulf of Maine / Georges Bank"  #c("Greenspotted rockfish - Pacific Coast")
-```
 
-Parametros iniciais e funçoes necessarias a analise
 
-```{r}
+# Parametros iniciais e funçoes necessarias a analise
+
+
 #-----------------------------------------
 # General settings for the analysis ----
 #-----------------------------------------
@@ -101,13 +105,13 @@ n            <- 5000 # number of points in multivariate cloud in graph panel (b)
 ni           <- 3 # iterations for r-k-startbiomass combinations, to test different variability patterns; no improvement seen above 3
 nab          <- 3 # recommended=5; minimum number of years with abundance data to run BSM
 bw           <- 3 # default bandwidth to be used by ksmooth() for catch data
-mgraphs      <- F # set to TRUE to produce additional graphs for management
+mgraphs      <- T # set to TRUE to produce additional graphs for management
 e.creep.line <- T # set to TRUE to display uncorrected CPUE in biomass graph
-kobe.plot    <- F # set to TRUE to produce additional kobe status plot; management graph needs to be TRUE for Kobe to work
-BSMfits.plot <- F # set to TRUE to plot fit diagnostics for BSM
-pp.plot      <- F # set to TRUE to plot Posterior and Prior distributions for CMSY and BSM
-rk.diags     <- F #><>MSY set to TRUE to plot diagnostic plot for r-k space
-retros       <- F # set to TRUE to enable retrospective analysis (1-3 years less in the time series)
+kobe.plot    <- T # set to TRUE to produce additional kobe status plot; management graph needs to be TRUE for Kobe to work
+BSMfits.plot <- T # set to TRUE to plot fit diagnostics for BSM
+pp.plot      <- T # set to TRUE to plot Posterior and Prior distributions for CMSY and BSM
+rk.diags     <- T #><>MSY set to TRUE to plot diagnostic plot for r-k space
+retros       <- T # set to TRUE to enable retrospective analysis (1-3 years less in the time series)
 save.plots   <- T # set to TRUE to save graphs to JPEG files
 close.plots  <- T # set to TRUE to close on-screen plots after they are saved, to avoid "too many open devices" error in batch-processing
 write.output <- T # set to TRUE if table with results in output file is wanted; expects years 2004-2014 to be available
@@ -356,12 +360,17 @@ traceEllipse<-function(rs,ks,prior.r,prior.k){
 #---------------------------------------------
 # END OF FUNCTIONS
 #---------------------------------------------
-  
+
+b = Sys.time()
+perf_cmsy_preproc_mis_w = b-a  
 ```
 
 
 
 ```{r}
+total_i = Sys.time()
+time_i = Sys.time()
+
 cat("-------------------------------------------\n")
 cat("CMSY++ Analysis,", date(),"\n")
 cat("-------------------------------------------\n")
@@ -419,9 +428,8 @@ cinfo = id
 id_file = 'train_occ' #artificio para ultrapassar a distincao train/sim que o script faz abaixo
 load(file = nn_file) # load neural network file
 # cat("Files", catch, ",", id,",",nn_file,"read successfully","\n")
-```
 
-```{r}
+
 #---------------------------------
 # Analyze stock(s)
 #---------------------------------
@@ -1049,6 +1057,8 @@ for(stock in stocks) {
   lcl.ct.cmsy      <- ct.quants.cmsy[2,]
   ucl.ct.cmsy      <- ct.quants.cmsy[3,]
 
+  
+  
   #-------------------------------------------------------------------
   # Plot results
   #-------------------------------------------------------------------
@@ -1301,6 +1311,11 @@ for(stock in stocks) {
   cat("Comment:", comment,"\n")
   cat("----------------------------------------------------------\n")
 
+  time_f = Sys.time()
+  perf_cmsy_fit_mis_w = time_f - time_i
+  
+  time_i = Sys.time()
+  
   # -----------------------------------------
   # Plot results ----
   # -----------------------------------------
@@ -2442,8 +2457,17 @@ for(stock in stocks) {
 	} #retrospective analysis plots - end
 
 } # end of stocks loop
-time_cmsy_f = Sys.time()
-time_cmsy_f-time_cmsy_i
+time_f = Sys.time()
+perf_cmsy_render_mis_w = time_f - time_i
+check = time_f - total_i
+
 ```
 
+```{r}
+perf_cmsy_w_mis = data.frame('Framework' = 'CMSY++ - Polyvalent, Western Coast, Yearly data',
+                              'Pre-process' = perf_cmsy_preproc_mis_w,
+                              'Model fit' = perf_cmsy_fit_mis_w,
+                              'Output Render' = check-perf_cmsy_fit_mis_w)
+save(perf_cmsy_w_mis, file = 'benchmarks/cmsy_mis_w_y.Rdata')
+```
 

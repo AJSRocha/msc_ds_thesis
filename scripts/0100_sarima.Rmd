@@ -3,11 +3,6 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-
-```{r}
-
-```
-
 # Methodology
 
 ```{r}
@@ -16,230 +11,60 @@ citation('forecast')
 citation('tseries')
 ```
 
+```{r}
+load('data/initial_data_occ_df_final.Rdata')
+col_mis_w  = wes_palette('Zissou1',4)[1]
+col_mis_s  = wes_palette('Zissou1',4)[3]                  
+col_otb_w  = wes_palette('Zissou1',4)[2]
+col_otb_s  = wes_palette('Zissou1',4)[4]
+```
 
 package \textit{stats}
 package \textit{forecast}
+
+# PreProcess
 
 ```{r}
 a = Sys.time()
 ## Weekly
 
-ts_w_MIS_W = df %>%
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(semana, year_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Ocidental') %>%
+ts_w_MIS_W = df_effort_w %>%
+  filter(fill %in% c('1-Western Coast 1-Polyvalent')) %>% 
   ungroup() %>% 
-  dplyr::select(QVENDA) %>% 
+  dplyr::select(catch) %>% 
   ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
 
-ts_w_OTB_W = df %>%
-  filter(EGRUPART %in% c('OTB')) %>% 
-  group_by(semana, year_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Ocidental') %>%
+ts_w_MIS_S = df_effort_w %>%
+  filter(fill %in% c('2-Southern Coast 1-Polyvalent')) %>% 
   ungroup() %>% 
-  dplyr::select(QVENDA) %>% 
+  dplyr::select(catch) %>% 
   ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
 
-
-ts_w_MIS_S = df %>%
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(semana, year_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>%
+ts_y_MIS_W = df_effort_y %>%
+  filter(fill %in% c('1-Western Coast 1-Polyvalent')) %>% 
   ungroup() %>% 
-  dplyr::select(QVENDA) %>% 
-  ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
-
-
-ts_w_OTB_S = df %>%
-  filter(EGRUPART %in% c('OTB')) %>% 
-  group_by(semana, year_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>%
-  ungroup() %>% 
-  dplyr::select(QVENDA) %>% 
-  ts(start = c(1995, 1), end= c(2022,52), frequency = 52)
-
-
-
-## Yearly
-
-ts_y_MIS_W = df %>%
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(year_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Ocidental') %>%
-  ungroup() %>% 
-  dplyr::select(QVENDA) %>% 
+  dplyr::select(catch) %>% 
   ts(start = c(1995), end= c(2022), frequency = 1)
 
-
-ts_y_OTB_W = df %>%
-  filter(EGRUPART %in% c('OTB')) %>% 
-  group_by(year_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Ocidental') %>%
+ts_y_MIS_S = df_effort_y %>%
+  filter(fill %in% c('2-Southern Coast 1-Polyvalent')) %>% 
   ungroup() %>% 
-  dplyr::select(QVENDA) %>% 
+  dplyr::select(catch) %>% 
   ts(start = c(1995), end= c(2022), frequency = 1)
-
-ts_y_MIS_S = df %>%
-  filter(EGRUPART %in% c('MIS_MIS')) %>% 
-  group_by(year_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>%
-  ungroup() %>% 
-  dplyr::select(QVENDA) %>% 
-  ts(start = c(1995), end= c(2022), frequency = 1)
-
-ts_y_OTB_S = df %>%
-  filter(EGRUPART %in% c('OTB')) %>% 
-  group_by(year_sale, regiao) %>% 
-  summarise(QVENDA = sum(QVENDA)) %>% 
-  filter(regiao == 'Costa Sul') %>%
-  ungroup() %>% 
-  dplyr::select(QVENDA) %>% 
-  ts(start = c(1995), end= c(2022), frequency = 1)
-
-
 
 b = Sys.time()
-time.boxjenkins.preproc = b-a
+perf_boxjenkins_preproc = b-a
 ```
+
+# Model Fit
 
 ```{r}
-fig = 
-grid.arrange(
-  
-autoplot(ts_w_MIS_W, col = col_mis_w) + theme_classic() + 
-  labs(title = 'Weekly Series - Polyvalent fleet - West Coast',
-       x = 'Year',
-       y = 'landings (kg)'),   
-  
-autoplot(ts_w_OTB_W, col = col_otb_w) + theme_classic() + 
-  labs(title = 'Weekly Series - Bottom Trawl fleet - West Coast',
-       x = 'Year',
-       y = 'landings (kg)'),
-  
-autoplot(ts_w_MIS_S, col = col_mis_s) + theme_classic() + 
-  labs(title = 'Weekly Series - Polyvalent fleet - South Coast',
-       x = 'Year',
-       y = 'landings (kg)'),
-
-autoplot(ts_w_OTB_S, col = col_otb_s) + theme_classic() + 
-  labs(title = 'Weekly Series - Bottom Trawl fleet - South Coast',
-       x = 'Year',
-       y = 'landings (kg)'),
-
-ncol = 1)
-
-ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_boxjenkins_weekly_series.png')
-```
-
-```{r}
-fig = 
-grid.arrange(
-  
-autoplot(ts_y_MIS_W, col = col_mis_w) + theme_classic() + 
-  labs(title = 'Yearly Series - Polyvalent fleet - West Coast',
-       x = 'Year',
-       y = 'landings (kg)'),
-
-autoplot(ts_y_OTB_W, col = col_otb_w) + theme_classic() + 
-  labs(title = 'Yearly Series - Bottom Trawl fleet - West Coast',
-       x = 'Year',
-       y = 'landings (kg)'),
-  
-autoplot(ts_y_MIS_S, col = col_mis_s) + theme_classic() + 
-  labs(title = 'Yearly Series - Polyvalent fleet - South Coast',
-       x = 'Year',
-       y = 'landings (kg)'),
-	   
-autoplot(ts_y_OTB_S, col = col_otb_s) + theme_classic() + 
-  labs(title = 'Yearly Series - Bottom Trawl fleet - South Coast',
-       x = 'Year',
-       y = 'landings (kg)'),
-
-ncol = 1)
-
-ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_boxjenkins_yearly_series.png')
-```
-
-
-# ACF - Weekly West
-
-```{r, fig.height = 20, fig.width=20}
-dev.new()
-par(mfrow = c(2,2), cex.main = 3)
-acf(ts_w_MIS_W, col = col_mis_w, main = 'West MIS - Weekly - ACF', lwd = 5);
-pacf(ts_w_MIS_W, col = col_mis_w, main = 'West MIS - Weekly - pACF', lwd = 5)
-acf(ts_w_OTB_W, col = col_otb_w, main = 'West OTB - Weekly - ACF', lwd = 5);
-pacf(ts_w_OTB_W, col = col_otb_w, main = 'West OTB - Weekly - pACF', lwd = 5)
-
-grid.echo()
-fig = grid.grab()
-ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/res_boxjenkins_week_W_acf.png')
-```
-
-# ACF - Weekly South
-
-```{r, fig.height=20, fig.width=20}
-
-par(mfrow = c(2,2), cex.main = 3)
-acf(ts_w_MIS_S, col = col_mis_s, main = 'South MIS - Weekly - ACF', lwd = 5);
-pacf(ts_w_MIS_S, col = col_mis_s, main = 'South MIS - Weekly - pACF', lwd = 5)
-acf(ts_w_OTB_S, col = col_otb_s, main = 'South OTB - Weekly - ACF', lwd = 5);
-pacf(ts_w_OTB_S, col = col_otb_s, main = 'South OTB - Weekly - pACF', lwd = 5)
-
-grid.echo()
-fig = grid.grab()
-
-ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/res_boxjenkins_week_S_acf.png')
-```
-
-# ACF - Yearly West
-
-```{r, fig.height = 20, fig.width=20}
-dev.new()
-par(mfrow = c(2,2), cex.main = 3)
-acf(ts_y_MIS_W, col = col_mis_w, main = 'West MIS - Yearly - ACF', lwd = 5);
-pacf(ts_y_MIS_W, col = col_mis_w, main = 'West MIS - Yearly - pACF', lwd = 5)
-acf(ts_y_OTB_W, col = col_otb_w, main = 'West OTB - Yearly - ACF', lwd = 5);
-pacf(ts_y_OTB_W, col = col_otb_w, main = 'West OTB - Yearly - pACF', lwd = 5)
-
-grid.echo()
-fig = grid.grab()
-
-ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/res_boxjenkins_year_W_acf.png')
-```
-
-# ACF - Yearly South
-
-```{r, fig.height = 20, fig.width=20}
-dev.new()
-par(mfrow = c(2,2), cex.main = 3)
-acf(ts_y_MIS_S, col = col_mis_s, main = 'South MIS - Yearly - ACF', lwd = 5);
-pacf(ts_y_MIS_S, col = col_mis_s, main = 'South MIS - Yearly - pACF', lwd = 5)
-acf(ts_y_OTB_S, col = col_otb_s, main = 'South OTB - Yearly - ACF', lwd = 5);
-pacf(ts_y_OTB_S, col = col_otb_s, main = 'South OTB - Yearly - pACF', lwd = 5)
-
-grid.echo()
-fig = grid.grab()
-
-ggsave(fig, dpi = 300, units = 'cm', filename = 'plots/res_boxjenkins_year_S_acf.png')
-```
-
-# Estacionariedade:
-
-```{r}
-
+a = Sys.time()
 estacionaridade = c()
-series = c('ts_w_MIS_W','ts_w_OTB_W',
-           'ts_w_MIS_S','ts_w_OTB_S',
-           'ts_y_MIS_W','ts_y_OTB_W',
-           'ts_y_MIS_S','ts_y_OTB_S')
+series = c('ts_w_MIS_W',
+           'ts_w_MIS_S',
+           'ts_y_MIS_W',
+           'ts_y_MIS_S')
 
 for(i in series){
   temp = get(i)
@@ -251,24 +76,24 @@ for(i in series){
 diferenca_ns = c()
 diferenca_s = c()
 
-for(i in 1:8){
+for(i in 1:4){
   temp = get(series[i])
   res_ns = ndiffs(temp)
   diferenca_ns[length(diferenca_ns)+1] = res_ns
-  if(i %in% c(1:4)){
+  if(i %in% c(1:2)){
     diferenca_s[length(diferenca_s)+1] = nsdiffs(temp)}
     else{diferenca_s[length(diferenca_s)+1] = NA}
   rm(temp, res_ns)
 }
 
 tab_estac = data.frame('fleet' = c('Polyvalent Fleet - West Coast - Weeks',
-                                 'Bottom Trawl Fleet - West Coast - Weeks',
+                                 # 'Bottom Trawl Fleet - West Coast - Weeks',
                                  'Polyvalent Fleet - South Coast - Weeks',
-                                 'Bottom Trawl Fleet - South Coast - Weeks',
+                                 # 'Bottom Trawl Fleet - South Coast - Weeks',
                                  'Polyvalent Fleet - West Coast - Years',
-                                 'Bottom Trawl Fleet - West Coast - Years',
-                                 'Polyvalent Fleet - South Coast - Years',
-                                 'Bottom Trawl Fleet - South Coast - Years'),
+                                 # 'Bottom Trawl Fleet - West Coast - Years',
+                                 'Polyvalent Fleet - South Coast - Years'),
+                                 # 'Bottom Trawl Fleet - South Coast - Years'),
                        'p-value' = estacionaridade,
                        'Estationary?' = ifelse(estacionaridade < 0.05, 'Yes', 'No'),
                        'Differentiation' = diferenca_ns,
@@ -283,63 +108,210 @@ xtable(tab_estac) %>%
         file = "tables/res_estac.tex", 
         include.rownames = F,
         only.contents = T)
+
+
+
+######## WEEKLY
+dts_mis_w_w.train = window(ts_w_MIS_W, end=c(2020,52))
+dts_mis_w_w.test=window(ts_w_MIS_W, start=c(2021,1), end=c(2022,52))
+
+auto.arima(dts_mis_w_w.train) 
+# (0,1,2)x(0,0,1)_52
+sarima_mis_w_w.train = Arima(dts_mis_w_w.train,
+                             order = c(0,1,2),
+                             seasonal=list(order=c(0,0,1), period=52))
+sarima_mis_w_w_forecast = forecast(sarima_mis_w_w.train,h=104)
+
+###
+dts_mis_s_w.train = window(ts_w_MIS_S, end=c(2020,52))
+dts_mis_s_w.test=window(ts_w_MIS_S, start=c(2021,1), end=c(2022,52))
+
+auto.arima(dts_mis_s_w.train) 
+# (2,0,3)x(0,0,2)_52
+sarima_mis_s_w.train = Arima(dts_mis_s_w.train,
+                             order = c(2,0,3),
+                             seasonal=list(order=c(0,0,2), period=52))
+sarima_mis_s_w_forecast = forecast(sarima_mis_s_w.train,h=104)
+
+######## YEARLY
+dts_mis_w_y.train = window(ts_y_MIS_W, end=c(2020))
+dts_mis_w_y.test=window(ts_y_MIS_W, start=c(2021), end=c(2022))
+
+auto.arima(dts_mis_w_y.train) 
+# (0,0,0)x(0,0,0)_1
+sarima_mis_w_y.train = Arima(dts_mis_w_y.train,
+                             order = c(0,0,0),
+                             seasonal=list(order=c(0,0,0), period=1))
+sarima_mis_w_y_forecast = forecast(sarima_mis_w_y.train,h=2)
+
+###
+dts_mis_s_y.train = window(ts_y_MIS_S, end=c(2020))
+dts_mis_s_y.test=window(ts_y_MIS_S, start=c(2021), end=c(2022))
+
+auto.arima(dts_mis_s_y.train) 
+# (0,0,0)x(0,0,0)_1
+sarima_mis_s_y.train = Arima(dts_mis_s_y.train,
+                             order = c(0,0,0),
+                             seasonal=list(order=c(0,0,0), period=1))
+sarima_mis_s_y_forecast = forecast(sarima_mis_s_y.train,h=2)
+
+b = Sys.time()
+perf_boxjenkins_fit = b-a
 ```
 
-
-
-
-# Modelacao
-
-## Weekly
-
-### ts_w_MIS_S
-
-It does not appear for the polyvalent fleet in the South that differentiation is necessary
+# Output rendering
 
 ```{r}
-nsdiffs(ts_w_MIS_S)
-ndiffs(diff(ts_w_MIS_S,12))
-```
+a = Sys.time()
 
-```{r}
-dts.train = window(ts_w_MIS_S, end=c(2020,52))
-dts.test=window(ts_w_MIS_S, start=c(2021,1), end=c(2022,52))
+fig = 
+grid.arrange(
+  
+autoplot(ts_w_MIS_W, col = col_mis_w) + theme_classic() + 
+  labs(title = 'Weekly Series - Polyvalent fleet - West Coast',
+       x = 'Year',
+       y = 'landings (kg)'),   
 
-auto.arima(dts.train) 
-# (2,1,2)x(1,0,1)_52
-m1 = Arima(dts.train, order = c(2,1,2), seasonal=list(order=c(1,0,1), period=52))
-m1.f = forecast(m1,h=104)
+autoplot(ts_w_MIS_S, col = col_mis_s) + theme_classic() + 
+  labs(title = 'Weekly Series - Polyvalent fleet - South Coast',
+       x = 'Year',
+       y = 'landings (kg)'),
 
-```
+ncol = 1)
 
-```{r}
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_boxjenkins_weekly_series.png')
 
+fig = 
+grid.arrange(
+  
+autoplot(ts_y_MIS_W, col = col_mis_w) + theme_classic() + 
+  labs(title = 'Yearly Series - Polyvalent fleet - West Coast',
+       x = 'Year',
+       y = 'landings (kg)'),
+  
+autoplot(ts_y_MIS_S, col = col_mis_s) + theme_classic() + 
+  labs(title = 'Yearly Series - Polyvalent fleet - South Coast',
+       x = 'Year',
+       y = 'landings (kg)'),
+	   
+ncol = 1)
+
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_boxjenkins_yearly_series.png')
+
+## ACF - Weekly
+
+dev.new()
+par(mfrow = c(2,2), cex.main = 3)
+acf(ts_w_MIS_W, col = col_mis_w, main = 'West MIS - Weekly - ACF', lwd = 5);
+pacf(ts_w_MIS_W, col = col_mis_w, main = 'West MIS - Weekly - pACF', lwd = 5)
+acf(ts_w_MIS_S, col = col_mis_s, main = 'South MIS - Weekly - ACF', lwd = 5);
+pacf(ts_w_MIS_S, col = col_mis_s, main = 'South MIS - Weekly - pACF', lwd = 5)
+# acf(ts_w_OTB_W, col = col_otb_w, main = 'West OTB - Weekly - ACF', lwd = 5);
+# pacf(ts_w_OTB_W, col = col_otb_w, main = 'West OTB - Weekly - pACF', lwd = 5)
+
+grid.echo()
+fig = grid.grab()
+ggsave(fig, dpi = 300, units = 'cm', width = 20, height = 20,
+       filename = 'plots/res_boxjenkins_week_W_acf.png')
+
+
+dev.new()
+par(mfrow = c(2,2), cex.main = 3)
+acf(ts_y_MIS_W, col = col_mis_w, main = 'West MIS - Yearly - ACF', lwd = 5);
+pacf(ts_y_MIS_W, col = col_mis_w, main = 'West MIS - Yearly - pACF', lwd = 5)
+acf(ts_y_MIS_S, col = col_mis_s, main = 'South MIS - Yearly - ACF', lwd = 5);
+pacf(ts_y_MIS_S, col = col_mis_s, main = 'South MIS - Yearly - pACF', lwd = 5)
+
+grid.echo()
+fig = grid.grab()
+
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_boxjenkins_year_W_acf.png')
+
+# Forecasts
+
+fig = 
 gridExtra::grid.arrange(
-  autoplot(m1.f,
+  autoplot(sarima_mis_w_w_forecast,
          alpha = 1,
          size = 0.5,
-         col = wes_palette('FantasticFox1',4)[1],
-         fcol = wes_palette('FantasticFox1',4)[2]) +
-    labs(title = expression('SARIMA(2,1,2)*(1,0,1)'[52])) +
+         col = col_mis_w,
+         fcol = col_otb_w) +
+    labs(title = expression('SARIMA(0,1,2)*(0,0,1)'[52])) +
     theme_light(),
-  autoplot(dts.train, col = wes_palette('FantasticFox1',4)[3]) +
-  autolayer(dts.test, color = wes_palette('FantasticFox1',4)[4],
+  autoplot(dts_mis_w_w.train, col = col_mis_w) +
+  autolayer(dts_mis_w_w.test, color = col_otb_w,
           linetype = 'dashed') +
-  labs(title = 'Real Data') +
+  labs(title = 'Real Data', y = 'catch (kg)') +
   theme_light(),
 ncol=1)
-  
 
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_boxjenkins_forecast_mis_w_w.png')
 
-autoplot(m1.f,
+fig = 
+gridExtra::grid.arrange(
+  autoplot(sarima_mis_s_w_forecast,
          alpha = 1,
-         size = 0.5) +
-  # xlim(as.Date('01-01-2020', format = '%d-%m-%Y'),
-  #      as.Date('01-12-2020', format = '%d-%m-%Y')) +
-autolayer(dts.test, color = 'red',
+         size = 0.5,
+         col = col_mis_s,
+         fcol = col_otb_s) +
+    labs(title = expression('SARIMA(2,0,3)*(0,0,2)'[52]), y = 'catch (kg)') +
+    theme_light(),
+  autoplot(dts_mis_s_w.train, col = col_mis_s) +
+  autolayer(dts_mis_s_w.test, color = col_otb_s,
           linetype = 'dashed') +
-  labs(title = expression('SARIMA(2,1,2)*(1,0,1)'[52])) +
-  theme_light()
+  labs(title = 'Real Data', y = 'catch (kg)') +
+  theme_light(),
+ncol=1)
+
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_boxjenkins_forecast_mis_s_w.png')
+
+fig = 
+gridExtra::grid.arrange(
+  autoplot(sarima_mis_w_y_forecast,
+         alpha = 1,
+         size = 0.5,
+         col = col_mis_w,
+         fcol = col_otb_w) +
+    labs(title = expression('SARIMA(0,0,0)*(0,0,0)'[1]), y = 'catch (kg)') +
+    theme_light(),
+  autoplot(dts_mis_w_y.train, col = col_mis_w) +
+  autolayer(dts_mis_w_y.test, color = col_otb_w,
+          linetype = 'dashed') +
+  labs(title = 'Real Data', y = 'catch (kg)') +
+  theme_light(),
+ncol=1)
+
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_boxjenkins_forecast_mis_w_y.png')
+
+fig = 
+gridExtra::grid.arrange(
+  autoplot(sarima_mis_s_y_forecast,
+         alpha = 1,
+         size = 0.5,
+         col = col_mis_s,
+         fcol = col_otb_s) +
+    labs(title = expression('SARIMA(0,0,0)*(0,0,0)'[1]), y = 'catch (kg)') +
+    theme_light(),
+  autoplot(dts_mis_s_y.train, col = col_mis_s) +
+  autolayer(dts_mis_s_y.test, color = col_otb_s,
+          linetype = 'dashed') +
+  labs(title = 'Real Data', y = 'catch (kg)') +
+  theme_light(),
+ncol=1)
+
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_boxjenkins_forecast_mis_s_y.png')
+
+b = Sys.time()
+perf_boxjenkins_render = b-a
 ```
 
+# Performance assessment
+
+```{r}
+perf_box_jenkins = data.frame('Framework' = 'Box Jenkins - Polivalent,  West + South, Yearly + Weekly data',
+                              'Pre-process' = perf_boxjenkins_preproc,
+                              'Model fit' = perf_boxjenkins_fit,
+                              'Output Render' = perf_boxjenkins_render)
+save(perf_box_jenkins, file = 'benchmarks/boxjenkins.Rdata')
+```
 
