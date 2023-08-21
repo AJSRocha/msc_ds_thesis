@@ -59,7 +59,7 @@ load("C:/repos/msc_ds_thesis/benchmarks/spict_mis_s_y.Rdata")
 temp_spict =
   rbind(perf_spict_w_mis_y,perf_spict_s_mis_y) %>% 
   reshape::melt()
-names(temp) = c('Framework', 'Phase', 'Time')
+names(temp_spict) = c('Framework', 'Phase', 'Time')
 
 xtable(temp_spict) %>% 
   print(.,
@@ -80,9 +80,25 @@ temp_spict %>%
   labs(x = '', y = 'seconds', fill = '')
 
 
+benchmark = rbind(temp, temp_jabba, temp_spict)
+
+benchmark$Framework =
+case_when(benchmark$Framework == "JABBA - Polyvalent, Southern Coast" ~ "JABBA - Polyvalent, Southern Coast, Yearly data",
+T ~ benchmark$Framework)
 
 
+fig =
+benchmark %>% 
+  ggplot() +
+  geom_bar(aes(x = Framework, y = Time, fill = Framework),
+           stat = 'identity',
+           position = 'dodge') + 
+  theme_bw() + 
+  theme(legend.position = 'bottom',
+        legend.direction = 'vertical',
+        axis.text.x = element_blank()) + 
+  facet_wrap(Phase ~., scales = 'free_y') + 
+  labs(x = '', y = 'time (s)', fill = '')
 
 
-
-ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = NA)
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/benchmark.png')

@@ -191,6 +191,8 @@ perf_jabba = data.frame(
   'Output Render' = c(perf_jabba_render_mis_w, perf_jabba_render_mis_s))
 
 save(perf_jabba, file = 'benchmarks/jabba.Rdata')
+save(bet_total_s, bet_total_w, file = 'tables/jabba_tables.Rdata')
+
 ```
 
 

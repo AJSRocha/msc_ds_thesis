@@ -63,6 +63,13 @@ xtable(
         include.rownames = T,
         only.contents = T)
 
+res_spict_w =  rbind(
+    sumspict.parest(res_spict),
+    sumspict.srefpoints(res_spict)[,1:4])
+
+save(res_spict_w, file = 'tables/spict_tables_w.Rdata')
+
+
 png('plots/res_spict_data_mis_w_y.png', height = 10, width = 10, units = 'in', res = 300)
 plotspict.data(res_spict)
 dev.off()
