@@ -202,7 +202,7 @@ ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/
 
 dev.new()
 par(mfrow = c(2,2), cex.main = 3)
-acf(ts_w_MIS_W, col = col_mis_w, main = 'West MIS - Weekly - ACF', lwd = 5);
+acf(ts_w_MIS_W, col = col_mis_w, main = 'West MIS - Weekly - ACF', lwd = 5, lag.max = 104);
 pacf(ts_w_MIS_W, col = col_mis_w, main = 'West MIS - Weekly - pACF', lwd = 5)
 acf(ts_w_MIS_S, col = col_mis_s, main = 'South MIS - Weekly - ACF', lwd = 5);
 pacf(ts_w_MIS_S, col = col_mis_s, main = 'South MIS - Weekly - pACF', lwd = 5)

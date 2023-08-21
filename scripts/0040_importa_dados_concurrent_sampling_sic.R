@@ -1,5 +1,10 @@
-lota16 = read.csv('data/catdyn/occ_20092016_cmp.csv', sep = ",", dec = ".") %>% 
-  mutate(ANO = substr(DATA_AM, 7,10))
+# lota16 = read.csv('data/catdyn/occ_20092016_cmp.csv', sep = ",", dec = ".") %>% 
+#   mutate(ANO = substr(DATA_AM, 7,10))
+
+lota16 = read.csv('data/catdyn/allspp_19972016_cmp.csv', sep = ",", dec = ".") %>%
+  mutate(ANO = substr(DATA_AM, 7,10)) %>% 
+  filter(COD_FAO == 'OCC')
+
 
 OTB =
   unique(lota16$ARTE_EU)[grepl('OTB',unique(lota16$ARTE_EU)) |
@@ -35,8 +40,8 @@ lota16 =
                                     ARTE_EU %in% PS ~ "PS",
                                     TRUE ~ "MIS")),
             COD_FAO = factor('OCC'),
-            land_kg = DESEMBARQUE,
-            PESO_AM = PESO_AM,
+            land_kg = gsub(',','.', DESEMBARQUE) %>% as.numeric(),
+            PESO_AM = gsub(',', '.', PESO_AM) %>% as.numeric(),
             cat = factor(
               case_when(
                 CAT %in% c("0", "T0", "~0", "T0.", "TO", "T", "TUD", "MIS") ~ "T0",
@@ -52,10 +57,10 @@ lota16 =
                 CAT %in% c("GM") ~ "GM",
                 CAT %in% c("G", "G+") ~ "G",
                 CAT %in% c("999") ~ "tatudouiui")),
-            PESO_A_C = PESO_A_C,
-            PESO_D_C = PESO_D_C,
+            PESO_A_C = gsub(',', '.', PESO_A_C) %>% as.numeric(),
+            PESO_D_C = gsub(',', '.', PESO_D_C) %>% as.numeric(),
             N_IND = N_IND,
-            C_CLASSE = C_CLASSE,
+            C_CLASSE = gsub(',', '.', C_CLASSE) %>% as.numeric(),
             INDIF = INDIF 
   ) %>% 
   mutate(PORTO_NOME = case_when(PORTO_NOME == 'LISBOA' ~ 'Lisboa',

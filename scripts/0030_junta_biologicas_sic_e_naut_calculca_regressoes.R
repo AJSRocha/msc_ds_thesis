@@ -21,7 +21,7 @@ bio_tmp =
 
 bio_tmp =
   bio_tmp %>%
-  filter(ano %in% c(2007:2022)) %>% 
+  filter(ano %in% c(1995:2022)) %>% 
   filter(peso > 0) %>%
   filter(comp_manto < 600) %>%
   filter(comp_manto > 0) %>% 

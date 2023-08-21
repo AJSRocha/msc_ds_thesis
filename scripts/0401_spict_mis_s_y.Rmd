@@ -53,6 +53,17 @@ spict_fit_mis_s_y = b-a
 ```{r}
 a = Sys.time()
 
+xtable(
+  rbind(
+    sumspict.parest(res_spict),
+    sumspict.srefpoints(res_spict)[,1:4])) %>% 
+  print(.,
+        type = "latex",
+        file = "tables/spict_res_s.tex", 
+        include.rownames = T,
+        only.contents = T)
+
+
 png('plots/res_spict_data_mis_s_y.png', height = 10, width = 10, units = 'in', res = 300)
 plotspict.data(res_spict)
 dev.off()

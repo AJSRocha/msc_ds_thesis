@@ -23,7 +23,7 @@ lota_naut_1 =
              peso_total_spp = c(rep(1, nrow(lota16)), lota_naut_1$peso_total_spp),
              peso_am_spp = c(rep(1, nrow(lota16)), lota_naut_1$peso_am_spp),
              n_nao_observados = c(lota16$INDIF, lota_naut_1$n_nao_observados)) %>% 
-  filter(ANO %in% c(2009:2022))
+  filter(ANO %in% c(1995:2022))
 
 
 lota_naut_1 =
@@ -95,6 +95,8 @@ lota_naut_2_cmp =
 
 
 #TODO acrescemtar id_caixa
+lota_naut_1$classe_comp = gsub(',','.', lota_naut_1$classe_comp) %>% as.numeric()
+
 naut_cmp = data.frame(
   id_viagem = c(lota_naut_1$id_viagem, lota_naut_2_cmp$id_viagem %>% as.character()),
   DATA = c(lota_naut_1$DATA, lota_naut_2_cmp$DATA),
