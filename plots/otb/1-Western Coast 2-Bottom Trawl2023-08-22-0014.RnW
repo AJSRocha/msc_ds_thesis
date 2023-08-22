@@ -1,0 +1,92 @@
+\documentclass[12pt,a4paper]{article}
+    \setlength\parindent{0pt}
+    \usepackage{geometry}
+    \usepackage{graphicx}
+    \usepackage{grffile}
+    \geometry{margin=0.5in}
+    \begin{document}
+
+    \section*{Octopus}
+
+
+    Species: \emph{Octopus vulgaris}, Stock code: 1-Western Coast 2-Bottom Trawl
+
+Region: Iberia
+
+Marine Ecoregion: Portugal
+
+Reconstructed catch data used from years 1995 - 2020 
+
+ For figure captions and method see http://www.seaaroundus.org/cmsy-method
+
+    \begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.00\textwidth ext=.jpg type=jpg]{1-Western Coast 2-Bottom Trawl_MAN.jpg}
+    \end{figure}
+
+    \textbf{Results for management (based on BSM analysis)}\\
+
+Fmsy = 0.246, 95\% CL = 0.168 - 0.349 (if B $>$ 1/2 Bmsy then Fmsy = 0.5 r)
+
+Fmsy = 0.148, 95\% CL = 0.101 - 0.21 (r and Fmsy are linearly reduced if B $<$ 1/2 Bmsy)
+
+MSY = 0.967,  95\% CL = 0.744 - 1.29; Bmsy = 3.93,  95\% CL = 2.8 - 5.63 (1000 tonnes)
+
+Biomass in last year = 1.19, 95\% CL = 0.756 - 1.82 (1000 tonnes)
+
+B/Bmsy in last year = 0.301, 95\% CL = 0.215 - 0.413
+
+Fishing mortality in last year = 0.0406, 95\% CL =0.0241 - 0.0683
+
+F/Fmsy  = 0.275, 95\% CL = 0.14 - 0.541 
+
+ Comment:  
+
+    \pagebreak
+
+    \begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.00\textwidth ext=.jpg type=jpg]{1-Western Coast 2-Bottom Trawl_AN.jpg}
+    \end{figure}
+
+    \textbf{Results of CMSY analysis conducted in JAGS}\\
+
+r = 0.65, 95\% CL = 0.446 - 0.829; k = 5.63, 95\% CL = 4.44 - 8.49 (1000 tonnes)
+
+MSY = 0.916, 95\% CL = 0.731 - 1.15 (1000 tonnes/year)
+
+Relative biomass last year = 0.112 k, 95\% CL = 0.0373 - 0.221
+
+Exploitation F/(r/2) in last year = 0.989 \\
+
+\textbf{Results from Bayesian Schaefer model using catch and CPUE}\\
+
+r = 0.492, 95\% CL = 0.335 - 0.698; k = 7.87, 95\% CL = 5.6 - 11.3
+
+r-k log correlation = -0.713
+
+MSY = 0.967, 95\% CL = 0.744 - 1.29 (1000 tonnes/year)
+
+Relative biomass in last year = 0.112 k, 95\% CL = 0.0373 - 0.221
+
+Exploitation F/(r/2) in last year = 0.0729
+
+q = 4.09, 95\% CL = 2.87 - 5.77
+
+Prior range of q = 1.05 - 18.9
+
+Relative abundance data type = CPUE
+
+Prior initial relative biomass = 0.256 - 0.721 default
+
+Prior intermediate relative biomass = 0.0546 - 0.295 in year 2015 default
+
+Prior final relative biomass = 0.0212 - 0.224, default
+
+Prior range for r = 0.6 - 1.5 default, prior range for k = 1.71 - 7.72 (1000 tonnes) default
+
+Source for relative biomass: 
+
+DGRM
+
+    \end{document}
