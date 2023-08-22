@@ -1,0 +1,104 @@
+
+library(xtable)
+library(dplyr)
+library(ggplot2)
+
+load("C:/repos/msc_ds_thesis/benchmarks/cmsy_otb_s_y.Rdata")
+load("C:/repos/msc_ds_thesis/benchmarks/cmsy_otb_w_y.Rdata")
+load("C:/repos/msc_ds_thesis/benchmarks/jabba_otb.Rdata")
+
+temp =
+rbind(perf_cmsy_w_otb,perf_cmsy_s_otb) %>% 
+  reshape::melt()
+names(temp) = c('Framework', 'Phase', 'Time')
+
+temp %>% 
+  ggplot() +
+  geom_bar(aes(x = variable, y = value, fill = Framework),
+           stat = 'identity',
+           position = 'dodge') + 
+    theme_bw() + 
+  theme(legend.position = 'bottom',
+        legend.direction = 'vertical') + 
+  labs(x = '', y = 'seconds', fill = '')
+
+
+xtable(temp) %>% 
+  print(.,
+        type = "latex",
+        file = "tables/otb/otb_perf.tex", 
+        include.rownames = F,
+        only.contents = T)
+
+temp_jabba =
+  perf_jabba%>% 
+  reshape::melt()
+names(temp_jabba) = c('Framework', 'Phase', 'Time')
+
+
+temp_jabba %>% 
+  ggplot() +
+  geom_bar(aes(x = variable, y = value, fill = Framework),
+           stat = 'identity',
+           position = 'dodge') + 
+  theme_bw() + 
+  theme(legend.position = 'bottom',
+        legend.direction = 'vertical') + 
+  labs(x = '', y = 'seconds', fill = '')
+
+xtable(temp_jabba) %>% 
+  print(.,
+        type = "latex",
+        file = "tables/otb/jabba_perf.tex", 
+        include.rownames = F,
+        only.contents = T)
+
+load("C:/repos/msc_ds_thesis/benchmarks/spict_otb_w_y.Rdata")
+load("C:/repos/msc_ds_thesis/benchmarks/spict_otb_s_y.Rdata")
+
+temp_spict =
+  rbind(perf_spict_w_otb_y,perf_spict_s_otb_y) %>% 
+  reshape::melt()
+names(temp_spict) = c('Framework', 'Phase', 'Time')
+
+xtable(temp_spict) %>% 
+  print(.,
+        type = "latex",
+        file = "tables/otb/spict_perf.tex", 
+        include.rownames = F,
+        only.contents = T)
+
+
+# temp_spict %>% 
+#   ggplot() +
+#   geom_bar(aes(x = variable, y = value, fill = Framework),
+#            stat = 'identity',
+#            position = 'dodge') + 
+#   theme_bw() + 
+#   theme(legend.position = 'bottom',
+#         legend.direction = 'vertical') + 
+#   labs(x = '', y = 'seconds', fill = '')
+
+
+benchmark = rbind(temp, temp_jabba, temp_spict)
+
+benchmark$Framework =
+case_when(benchmark$Framework == "JABBA - Bottom Trawl, Southern Coast" ~ "JABBA - Bottom Trawl, Southern Coast, Yearly data",
+T ~ benchmark$Framework)
+
+
+fig =
+benchmark %>% 
+  ggplot() +
+  geom_bar(aes(x = Framework, y = Time, fill = Framework),
+           stat = 'identity',
+           position = 'dodge') + 
+  theme_bw() + 
+  theme(legend.position = 'bottom',
+        legend.direction = 'vertical',
+        axis.text.x = element_blank()) + 
+  facet_wrap(Phase ~., scales = 'free_y') + 
+  labs(x = '', y = 'time (s)', fill = '')
+
+
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/otb/benchmark.png')
