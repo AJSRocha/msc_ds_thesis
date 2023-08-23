@@ -1,58 +1,88 @@
 library(ggplot2)
-library(ggsave)
+library(dplyr)
+library(tidyr)
 library(wesanderson)
 
-global_landings = data.frame(
-  rbind(
-  c(1980,		66370),
-  c(1981,		88714),
-  c(1982,		61909),
-  c(1983,		99802),
-  c(1984,		65138),
-  c(1985,		62934),
-  c(1986,		64371),
-  c(1987,		62541),
-  c(1988,		57761),
-  c(1989,		61791),
-  c(1990,		62193),
-  c(1991,		80247),
-  c(1992, 	75752),
-  c(1993,		69422),
-  c(1994,		66314),
-  c(1995,		66764),
-  c(1996,		72936),
-  c(1997,		60313),
-  c(1998,		72477),
-  c(1999,		56063),
-  c(2000,		50742),
-  c(2001,		53158),
-  c(2002,		41997),
-  c(2003,		45989),
-  c(2004,		50698),
-  c(2005,		34684),
-  c(2006,		43772),
-  c(2007,		34307),
-  c(2008,		33551),
-  c(2009,		40716),
-  c(2010,		41593),
-  c(2011,		40340),
-  c(2012,		40682),
-  c(2013,		42234),
-  c(2014,		43383),
-  c(2015,		34237),
-  c(2016,		35980),
-  c(2017,		38496.88),
-  c(2018, 	39905.535),
-  c(2019,	46884.388),
-  c(2020,		33395.508)))
 
-names(global_landings) = c('year', 'tonnes')
+# só de OCC
+global_landings = read.csv('data/global_production_quantity.csv')
 
-ggplot(global_landings) + 
-  geom_bar(aes(x = year,
-               y = tonnes),
+global_landings = global_landings[,names(global_landings)[!grepl('Flag', names(global_landings))]]
+
+gl =
+global_landings %>% 
+  pivot_longer(c(-Country.Name.En, -Continent.Name.En, -FAO.major.fishing.area.Name.En, -Ocean.Name.En, -Unit.Name),
+               names_to = 'Year',
+               values_to = 'tons')
+
+fig =
+gl %>% 
+  group_by(Continent.Name.En, Year) %>% 
+  summarise(landings = sum(tons, na.rm = T)) %>% 
+  mutate(Year = substr(Year,2,5) %>% as.numeric) %>%  
+  ggplot() +
+  # geom_line(aes(x = Year,
+  #               y = landings,
+  #               color = Continent.Name.En,
+  #               group = Continent.Name.En)) + 
+  geom_bar(aes(x = Year,
+               y = landings,
+               fill = Continent.Name.En),
            stat = 'identity',
-           fill = wes_palette('Zissou1', 1)) +
-  theme_bw() 
+           color = 'black')+
+  scale_fill_manual(values = wes_palette('GrandBudapest2')) + 
+  scale_x_continuous(breaks = seq(1950, 2021, 5)) +
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = 'none') + 
+  facet_wrap(Continent.Name.En ~., ncol = 2, scales = 'free_y') + 
+  labs(fill = '',
+       y = 'tons')
 
-ggsave('global_landings.png')  
+
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/global_landings.png')
+
+
+# todos os polvos
+global_landings_all = read.csv('data/global_production_quantity_comb.csv')
+
+global_landings_all = global_landings_all[,names(global_landings_all)[!grepl('Flag', names(global_landings_all))]]
+
+gl_all =
+  global_landings_all %>% 
+  pivot_longer(c(-Country.Name.En, -Continent.Name.En, -FAO.major.fishing.area.Name.En, -Ocean.Name.En, -Unit.Name),
+               names_to = 'Year',
+               values_to = 'tons') %>% 
+  mutate(Continent.Name.En = case_when(Continent.Name.En == '' ~ 'USSR + others',
+                                      T ~ Continent.Name.En))
+
+unique(gl_all$Continent.Name.En)
+
+fig_all =
+  gl_all %>% 
+  group_by(Continent.Name.En, Year) %>% 
+  summarise(landings = sum(tons, na.rm = T)) %>% 
+  mutate(Year = substr(Year,2,5) %>% as.numeric) %>%  
+  ggplot() +
+  # geom_line(aes(x = Year,
+  #               y = landings,
+  #               color = Continent.Name.En,
+  #               group = Continent.Name.En)) + 
+  geom_bar(aes(x = Year,
+               y = landings,
+               fill = Continent.Name.En),
+           stat = 'identity',
+           color = 'black')+
+  scale_fill_manual(values = c(wes_palette('GrandBudapest2'), wes_palette('GrandBudapest1'))) + 
+  scale_x_continuous(breaks = seq(1950, 2021, 5)) +
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = 'none') + 
+  facet_wrap(Continent.Name.En ~., ncol = 2, scales = 'free_y') + 
+  labs(fill = '',
+       y = 'tons')
+
+
+ggsave(fig_all, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/global_landings_all.png')
+
+
