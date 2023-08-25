@@ -86,3 +86,9 @@ fig_all =
 ggsave(fig_all, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/global_landings_all.png')
 
 
+
+# desembarques nacionais
+
+
+
+
