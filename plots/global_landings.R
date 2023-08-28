@@ -88,7 +88,51 @@ ggsave(fig_all, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'pl
 
 
 # desembarques nacionais
+land_pt = read.csv('data/pt_production.csv',
+                   sep = ';')
 
+fig =
+gridExtra::grid.arrange(
+land_pt %>% 
+  filter(Especie == 'Polvos') %>%
+  filter(Year > 2001) %>% 
+  ggplot() + 
+  geom_bar(aes(x = Year, 
+               y = land_tot_ton),
+           stat = 'identity',
+           fill = wes_palette('FantasticFox1')[1]) + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90)) + 
+  labs(y = 'tons', fill = '') 
+  # # geom_line(aes(x = Year,
+  #               y = ))
+,
+land_pt %>% 
+  # filter(Especie == 'Polvos') %>%
+  filter(Year > 2001) %>% 
+  group_by(Year) %>% 
+  summarise(land_perc = land_tot_ton[Especie == 'Polvos']/
+              land_tot_ton[Especie == 'Total'] * 100,
+            val_perc = thousands_euros_tot[Especie == 'Polvos']/
+              thousands_euros_tot[Especie == 'Total'] * 100
+            ) %>% 
+  pivot_longer(cols = -Year,
+               names_to = 'type',
+               values_to = 'perc') %>%
+  mutate(type = case_when(type == 'land_perc' ~ 'Weight landed',
+                          T ~ 'Monetary value')) %>% 
+  ggplot() + 
+  geom_line(aes(x = Year, 
+               y = perc,
+               group = type,
+               color = type),
+            size = 2) + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90),
+        axis.title.y = element_text(angle = 0),
+        legend.position = 'bottom') + 
+  labs(y = '%', color = "") + 
+  scale_color_manual(values = c(wes_palette('Zissou1')[1],wes_palette('Zissou1')[3]))
+,ncol=1)
 
-
-
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/pt_landings_all.png')
