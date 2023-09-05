@@ -201,11 +201,11 @@ ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/
 ## ACF - Weekly
 
 dev.new()
-par(mfrow = c(2,2), cex.main = 3)
-acf(ts_w_MIS_W, col = col_mis_w, main = 'West MIS - Weekly - ACF', lwd = 5, lag.max = 104);
-pacf(ts_w_MIS_W, col = col_mis_w, main = 'West MIS - Weekly - pACF', lwd = 5)
-acf(ts_w_MIS_S, col = col_mis_s, main = 'South MIS - Weekly - ACF', lwd = 5);
-pacf(ts_w_MIS_S, col = col_mis_s, main = 'South MIS - Weekly - pACF', lwd = 5)
+par(mfrow = c(2,2), cex.main = 1)
+acf(ts_w_MIS_W, col = col_mis_w, main = 'West MIS - Weekly - ACF', lwd = 1, lag.max = 104);
+pacf(ts_w_MIS_W, col = col_mis_w, main = 'West MIS - Weekly - pACF', lwd = 1,  lag.max = 104)
+acf(ts_w_MIS_S, col = col_mis_s, main = 'South MIS - Weekly - ACF', lwd = 1,  lag.max = 104);
+pacf(ts_w_MIS_S, col = col_mis_s, main = 'South MIS - Weekly - pACF', lwd = 1, lag.max = 104)
 # acf(ts_w_OTB_W, col = col_otb_w, main = 'West OTB - Weekly - ACF', lwd = 5);
 # pacf(ts_w_OTB_W, col = col_otb_w, main = 'West OTB - Weekly - pACF', lwd = 5)
 
@@ -216,16 +216,16 @@ ggsave(fig, dpi = 300, units = 'cm', width = 20, height = 20,
 
 
 dev.new()
-par(mfrow = c(2,2), cex.main = 3)
-acf(ts_y_MIS_W, col = col_mis_w, main = 'West MIS - Yearly - ACF', lwd = 5);
-pacf(ts_y_MIS_W, col = col_mis_w, main = 'West MIS - Yearly - pACF', lwd = 5)
-acf(ts_y_MIS_S, col = col_mis_s, main = 'South MIS - Yearly - ACF', lwd = 5);
-pacf(ts_y_MIS_S, col = col_mis_s, main = 'South MIS - Yearly - pACF', lwd = 5)
+par(mfrow = c(2,2), cex.main = 1)
+acf(ts_y_MIS_W, col = col_mis_w, main = 'West MIS - Yearly - ACF', lwd = 3);
+pacf(ts_y_MIS_W, col = col_mis_w, main = 'West MIS - Yearly - pACF', lwd = 3)
+acf(ts_y_MIS_S, col = col_mis_s, main = 'South MIS - Yearly - ACF', lwd = 3);
+pacf(ts_y_MIS_S, col = col_mis_s, main = 'South MIS - Yearly - pACF', lwd = 3)
 
 grid.echo()
 fig = grid.grab()
 
-ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_boxjenkins_year_W_acf.png')
+ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/res_boxjenkins_year_acf.png')
 
 # Forecasts
 
