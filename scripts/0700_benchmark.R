@@ -5,6 +5,7 @@ library(ggplot2)
 load("C:/repos/msc_ds_thesis/benchmarks/cmsy_mis_s_y.Rdata")
 load("C:/repos/msc_ds_thesis/benchmarks/cmsy_mis_w_y.Rdata")
 load("C:/repos/msc_ds_thesis/benchmarks/jabba.Rdata")
+load("C:/repos/msc_ds_thesis/benchmarks/jabba_all.Rdata")
 
 temp =
 rbind(perf_cmsy_w_mis,perf_cmsy_s_mis) %>% 
@@ -53,6 +54,19 @@ xtable(temp_jabba) %>%
         include.rownames = F,
         only.contents = T)
 
+temp_jabba_all =
+  perf_jabba_all%>% 
+  reshape::melt()
+names(temp_jabba_all) = c('Model', 'Framework', 'Phase', 'Time')
+
+xtable(temp_jabba_all) %>% 
+  print(.,
+        type = "latex",
+        file = "tables/jabba_all_perf.tex", 
+        include.rownames = F,
+        only.contents = T)
+
+
 load("C:/repos/msc_ds_thesis/benchmarks/spict_mis_w_y.Rdata")
 load("C:/repos/msc_ds_thesis/benchmarks/spict_mis_s_y.Rdata")
 
@@ -80,7 +94,12 @@ temp_spict %>%
   labs(x = '', y = 'seconds', fill = '')
 
 
-benchmark = rbind(temp, temp_jabba, temp_spict)
+benchmark = rbind(temp,
+                  temp_jabba_all %>%
+                    transmute(Framework = paste(Framework, Model),
+                              Phase = Phase,
+                              Time = Time),
+                  temp_spict)
 
 benchmark$Framework =
 case_when(benchmark$Framework == "JABBA - Polyvalent, Southern Coast" ~ "JABBA - Polyvalent, Southern Coast, Yearly data",
@@ -98,7 +117,8 @@ benchmark %>%
         legend.direction = 'vertical',
         axis.text.x = element_blank()) + 
   facet_wrap(Phase ~., scales = 'free_y') + 
-  labs(x = '', y = 'time (s)', fill = '')
+  labs(x = '', y = 'time (s)', fill = '') + 
+  scale_fill_manual(values=c(wes_palette('FantasticFox1'),wes_palette('AsteroidCity1')))
 
 
 ggsave(fig, dpi = 300, width = 20, height = 20, units = 'cm', filename = 'plots/benchmark.png')
