@@ -95,7 +95,7 @@ contabilidade_s %>%
   # filter(ANO == 2017) %>% View()
   ggplot +
   geom_line(aes(x = semana,
-                y = mean_weight,
+                y = mean_weight_estim,
                 group = ANO,
                 color = ANO)) +
   # geom_smooth(aes(x = semana,
@@ -757,5 +757,43 @@ plotador(cat_w_22, fit_w_22)
 ```
 
 
+```{r}
+
+contabilidade_w_m =
+naut_peso2 %>%
+  filter(regiao == 'Western Coast') %>% 
+  group_by(id_caixa, MES, ANO) %>% 
+  summarise(peso_am = unique(peso_am_caixa),
+            n_am = sum(n_nao_observados,na.rm=T)) %>% 
+  group_by(MES, ANO) %>% 
+  summarise(peso = sum(peso_am,na.rm=T),
+            n = sum(n_am,na.rm=T),
+            mean_weight = peso/n)
+contabilidade_w_m$ANO = factor(contabilidade_w_m$ANO)
+contabilidade_w_m$ANO = droplevels(contabilidade_w_m$ANO) 
+contabilidade_w_m = complete(contabilidade_w_m, ANO)
+contabilidade_w_m = contabilidade_w_m %>% 
+  arrange(ANO,MES) %>% 
+  mutate(time =as.numeric(as.character(ANO))+as.numeric(MES)/12)
+contabilidade_w_m$mean_weight_estim = na_interpolation(contabilidade_w_m$mean_weight)
+
+temp =
+df_effort_m %>% 
+  filter(fill == '1-Western Coast 1-Polyvalent') %>% 
+  left_join(contabilidade_w_m,
+            by = c('year_sale' = 'ANO',
+                   'month_sale' = 'MES'))
+
+cat_w_mis = as.CatDynData(x=temp %>% ,
+                           step="month",
+                           fleet.name="Polyvalent-W",
+                           coleff=7,
+                           colcat=5,
+                           colmbw=14,
+                           unitseff="trips",
+                           unitscat="kg",
+                           unitsmbw="kg",
+                           nmult="thou")
+```
 
 
