@@ -9,6 +9,7 @@ library(ggplot2)
 library(tidyr)
 library(imputeTS)
 library(CatDyn)
+library(xtable)
 ```
 
 ```{r}
@@ -91,206 +92,193 @@ contabilidade_s = contabilidade_s %>%
 contabilidade_s$mean_weight_estim = na_interpolation(contabilidade_s$mean_weight)
 
 
-contabilidade_s %>%
-  # filter(ANO == 2017) %>% View()
-  ggplot +
-  geom_line(aes(x = semana,
-                y = mean_weight_estim,
-                group = ANO,
-                color = ANO)) +
-  # geom_smooth(aes(x = semana,
-  #                 y =  mean_weight)) +
-  facet_wrap(ANO~.) +
-  labs(title = 'Costa SUL') +
-  theme_bw()
-
-df_w_12 =
-df_effort_w %>% 
-  filter(fill == '1-Western Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2012) %>% 
-  left_join(.,
-            contabilidade_w %>% 
-              filter(ANO == 2012),
-            by = 'semana')
-
-df_w_13 =
-df_effort_w %>% 
-  filter(fill == '1-Western Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2013) %>% 
-  left_join(.,
-            contabilidade_w %>% 
-              filter(ANO == 2013),
-            by = 'semana')
-
-df_w_14 =
-df_effort_w %>% 
-  filter(fill == '1-Western Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2014) %>% 
-  left_join(.,
-            contabilidade_w %>% 
-              filter(ANO == 2014),
-            by = 'semana')
-
-df_w_15 =
-df_effort_w %>% 
-  filter(fill == '1-Western Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2015) %>% 
-  left_join(.,
-            contabilidade_w %>% 
-              filter(ANO == 2015),
-            by = 'semana')
-
-df_w_16 =
-df_effort_w %>% 
-  filter(fill == '1-Western Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2016) %>% 
-  left_join(.,
-            contabilidade_w %>% 
-              filter(ANO == 2016),
-            by = 'semana')
-
-df_w_17 =
-df_effort_w %>% 
-  filter(fill == '1-Western Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2017) %>% 
-  left_join(.,
-            contabilidade_w %>% 
-              filter(ANO == 2017),
-            by = 'semana')
-
-df_w_18 =
-df_effort_w %>% 
-  filter(fill == '1-Western Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2018) %>% 
-  left_join(.,
-            contabilidade_w %>% 
-              filter(ANO == 2018),
-            by = 'semana')
-
-df_w_19 =
-df_effort_w %>% 
-  filter(fill == '1-Western Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2019) %>% 
-  left_join(.,
-            contabilidade_w %>% 
-              filter(ANO == 2019),
-            by = 'semana')
-df_w_20 =
-df_effort_w %>% 
-  filter(fill == '1-Western Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2020) %>% 
-  left_join(.,
-            contabilidade_w %>% 
-              filter(ANO == 2020),
-            by = 'semana')
-
-df_w_21 =
-df_effort_w %>% 
-  filter(fill == '1-Western Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2021) %>% 
-  left_join(.,
-            contabilidade_w %>% 
-              filter(ANO == 2021),
-            by = 'semana')
-
+# df_w_12 =
+# df_effort_w %>% 
+#   filter(fill == '1-Western Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2012) %>% 
+#   left_join(.,
+#             contabilidade_w %>% 
+#               filter(ANO == 2012),
+#             by = 'semana')
+# 
+# df_w_13 =
+# df_effort_w %>% 
+#   filter(fill == '1-Western Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2013) %>% 
+#   left_join(.,
+#             contabilidade_w %>% 
+#               filter(ANO == 2013),
+#             by = 'semana')
+# 
+# df_w_14 =
+# df_effort_w %>% 
+#   filter(fill == '1-Western Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2014) %>% 
+#   left_join(.,
+#             contabilidade_w %>% 
+#               filter(ANO == 2014),
+#             by = 'semana')
+# 
+# df_w_15 =
+# df_effort_w %>% 
+#   filter(fill == '1-Western Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2015) %>% 
+#   left_join(.,
+#             contabilidade_w %>% 
+#               filter(ANO == 2015),
+#             by = 'semana')
+# 
+# df_w_16 =
+# df_effort_w %>% 
+#   filter(fill == '1-Western Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2016) %>% 
+#   left_join(.,
+#             contabilidade_w %>% 
+#               filter(ANO == 2016),
+#             by = 'semana')
+# 
+# df_w_17 =
+# df_effort_w %>% 
+#   filter(fill == '1-Western Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2017) %>% 
+#   left_join(.,
+#             contabilidade_w %>% 
+#               filter(ANO == 2017),
+#             by = 'semana')
+# 
+# df_w_18 =
+# df_effort_w %>% 
+#   filter(fill == '1-Western Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2018) %>% 
+#   left_join(.,
+#             contabilidade_w %>% 
+#               filter(ANO == 2018),
+#             by = 'semana')
+# 
+# df_w_19 =
+# df_effort_w %>% 
+#   filter(fill == '1-Western Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2019) %>% 
+#   left_join(.,
+#             contabilidade_w %>% 
+#               filter(ANO == 2019),
+#             by = 'semana')
+# df_w_20 =
+# df_effort_w %>% 
+#   filter(fill == '1-Western Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2020) %>% 
+#   left_join(.,
+#             contabilidade_w %>% 
+#               filter(ANO == 2020),
+#             by = 'semana')
+# 
+# df_w_21 =
+# df_effort_w %>% 
+#   filter(fill == '1-Western Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2021) %>% 
+#   left_join(.,
+#             contabilidade_w %>% 
+#               filter(ANO == 2021),
+#             by = 'semana')
+# 
 df_w_22 =
-df_effort_w %>% 
-  filter(fill == '1-Western Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2022) %>% 
+df_effort_w %>%
+  filter(fill == '1-Western Coast 1-Polyvalent') %>%
+  filter(year_sale == 2022) %>%
   left_join(.,
-            contabilidade_w %>% 
+            contabilidade_w %>%
               filter(ANO == 2022),
             by = 'semana')
-
-df_s_12 =
-df_effort_w %>% 
-  filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2012) %>% 
-  left_join(.,
-            contabilidade_s %>% 
-              filter(ANO == 2012),
-            by = 'semana')
-
-df_s_13 =
-df_effort_w %>% 
-  filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2013) %>% 
-  left_join(.,
-            contabilidade_s %>% 
-              filter(ANO == 2013),
-            by = 'semana')
-
-df_s_14 =
-df_effort_w %>% 
-  filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2014) %>% 
-  left_join(.,
-            contabilidade_s %>% 
-              filter(ANO == 2014),
-            by = 'semana')
-
-df_s_15 =
-df_effort_w %>%
-  filter(semana != 53) %>% 
-  filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2015) %>% 
-  left_join(.,
-            contabilidade_s %>% 
-              filter(ANO == 2015),
-            by = 'semana')
-
-df_s_16 =
-df_effort_w %>% 
-  filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2016) %>% 
-  left_join(.,
-            contabilidade_s %>% 
-              filter(ANO == 2016),
-            by = 'semana')
-
-df_s_17 =
-df_effort_w %>% 
-  filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2017) %>% 
-  left_join(.,
-            contabilidade_s %>% 
-              filter(ANO == 2017),
-            by = 'semana')
-
-df_s_18 =
-df_effort_w %>% 
-  filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2018) %>% 
-  left_join(.,
-            contabilidade_s %>% 
-              filter(ANO == 2018),
-            by = 'semana')
-
-df_s_19 =
-df_effort_w %>% 
-  filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2019) %>% 
-  left_join(.,
-            contabilidade_s %>% 
-              filter(ANO == 2019),
-            by = 'semana')
-df_s_20 =
-df_effort_w %>% 
-  filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2020) %>% 
-  left_join(.,
-            contabilidade_s %>% 
-              filter(ANO == 2020),
-            by = 'semana')
-
-df_s_21 =
-df_effort_w %>% 
-  filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
-  filter(year_sale == 2021) %>% 
-  left_join(.,
-            contabilidade_s %>% 
-              filter(ANO == 2021),
-            by = 'semana')
+# 
+# df_s_12 =
+# df_effort_w %>% 
+#   filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2012) %>% 
+#   left_join(.,
+#             contabilidade_s %>% 
+#               filter(ANO == 2012),
+#             by = 'semana')
+# 
+# df_s_13 =
+# df_effort_w %>% 
+#   filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2013) %>% 
+#   left_join(.,
+#             contabilidade_s %>% 
+#               filter(ANO == 2013),
+#             by = 'semana')
+# 
+# df_s_14 =
+# df_effort_w %>% 
+#   filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2014) %>% 
+#   left_join(.,
+#             contabilidade_s %>% 
+#               filter(ANO == 2014),
+#             by = 'semana')
+# 
+# df_s_15 =
+# df_effort_w %>%
+#   filter(semana != 53) %>% 
+#   filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2015) %>% 
+#   left_join(.,
+#             contabilidade_s %>% 
+#               filter(ANO == 2015),
+#             by = 'semana')
+# 
+# df_s_16 =
+# df_effort_w %>% 
+#   filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2016) %>% 
+#   left_join(.,
+#             contabilidade_s %>% 
+#               filter(ANO == 2016),
+#             by = 'semana')
+# 
+# df_s_17 =
+# df_effort_w %>% 
+#   filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2017) %>% 
+#   left_join(.,
+#             contabilidade_s %>% 
+#               filter(ANO == 2017),
+#             by = 'semana')
+# 
+# df_s_18 =
+# df_effort_w %>% 
+#   filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2018) %>% 
+#   left_join(.,
+#             contabilidade_s %>% 
+#               filter(ANO == 2018),
+#             by = 'semana')
+# 
+# df_s_19 =
+# df_effort_w %>% 
+#   filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2019) %>% 
+#   left_join(.,
+#             contabilidade_s %>% 
+#               filter(ANO == 2019),
+#             by = 'semana')
+# df_s_20 =
+# df_effort_w %>% 
+#   filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2020) %>% 
+#   left_join(.,
+#             contabilidade_s %>% 
+#               filter(ANO == 2020),
+#             by = 'semana')
+# 
+# df_s_21 =
+# df_effort_w %>% 
+#   filter(fill == '2-Southern Coast 1-Polyvalent') %>% 
+#   filter(year_sale == 2021) %>% 
+#   left_join(.,
+#             contabilidade_s %>% 
+#               filter(ANO == 2021),
+#             by = 'semana')
 
 df_s_22 =
 df_effort_w %>% 
@@ -301,135 +289,135 @@ df_effort_w %>%
               filter(ANO == 2022),
             by = 'semana')
 
-cat_w_12 = as.CatDynData(x=df_w_12,
-                           step="week",
-                           fleet.name="Polyvalent-W",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2012-01-01"),
-                                          as.Date("2012-12-23")))
-
-cat_w_13 = as.CatDynData(x=df_w_13,
-                           step="week",
-                           fleet.name="Polyvalent-W-2013",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2013-01-01"),
-                                          as.Date("2013-12-25")))
-
-cat_w_14 = as.CatDynData(x=df_w_14,
-                           step="week",
-                           fleet.name="Polyvalent-W-2014",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2014-01-01"),
-                                          as.Date("2014-12-25")))
-
-cat_w_15 = as.CatDynData(x=df_w_15,
-                           step="week",
-                           fleet.name="Polyvalent-W-2015",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2015-01-01"),
-                                          as.Date("2015-12-28")))
-
-cat_w_16 = as.CatDynData(x=df_w_16,
-                           step="week",
-                           fleet.name="Polyvalent-W-2016",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2016-01-01"),
-                                          as.Date("2016-12-28")))
-
-cat_w_17 = as.CatDynData(x=df_w_17,
-                           step="week",
-                           fleet.name="Polyvalent-W-2017",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2017-01-01"),
-                                          as.Date("2017-12-24")))
-
-cat_w_18 = as.CatDynData(x=df_w_18,
-                           step="week",
-                           fleet.name="Polyvalent-W-2018",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2018-01-01"),
-                                          as.Date("2018-12-28")))
-
-cat_w_19 = as.CatDynData(x=df_w_19,
-                           step="week",
-                           fleet.name="Polyvalent-W-2019",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2019-01-01"),
-                                          as.Date("2019-12-28")))
-
-cat_w_20 = as.CatDynData(x=df_w_20,
-                           step="week",
-                           fleet.name="Polyvalent-W-2020",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2020-01-01"),
-                                          as.Date("2020-12-28")))
-
-cat_w_21 = as.CatDynData(x=df_w_21,
-                           step="week",
-                           fleet.name="Polyvalent-W-2021",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2021-01-01"),
-                                          as.Date("2021-12-28")))
+# cat_w_12 = as.CatDynData(x=df_w_12,
+#                            step="week",
+#                            fleet.name="Polyvalent-W",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2012-01-01"),
+#                                           as.Date("2012-12-23")))
+# 
+# cat_w_13 = as.CatDynData(x=df_w_13,
+#                            step="week",
+#                            fleet.name="Polyvalent-W-2013",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2013-01-01"),
+#                                           as.Date("2013-12-25")))
+# 
+# cat_w_14 = as.CatDynData(x=df_w_14,
+#                            step="week",
+#                            fleet.name="Polyvalent-W-2014",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2014-01-01"),
+#                                           as.Date("2014-12-25")))
+# 
+# cat_w_15 = as.CatDynData(x=df_w_15,
+#                            step="week",
+#                            fleet.name="Polyvalent-W-2015",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2015-01-01"),
+#                                           as.Date("2015-12-28")))
+# 
+# cat_w_16 = as.CatDynData(x=df_w_16,
+#                            step="week",
+#                            fleet.name="Polyvalent-W-2016",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2016-01-01"),
+#                                           as.Date("2016-12-28")))
+# 
+# cat_w_17 = as.CatDynData(x=df_w_17,
+#                            step="week",
+#                            fleet.name="Polyvalent-W-2017",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2017-01-01"),
+#                                           as.Date("2017-12-24")))
+# 
+# cat_w_18 = as.CatDynData(x=df_w_18,
+#                            step="week",
+#                            fleet.name="Polyvalent-W-2018",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2018-01-01"),
+#                                           as.Date("2018-12-28")))
+# 
+# cat_w_19 = as.CatDynData(x=df_w_19,
+#                            step="week",
+#                            fleet.name="Polyvalent-W-2019",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2019-01-01"),
+#                                           as.Date("2019-12-28")))
+# 
+# cat_w_20 = as.CatDynData(x=df_w_20,
+#                            step="week",
+#                            fleet.name="Polyvalent-W-2020",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2020-01-01"),
+#                                           as.Date("2020-12-28")))
+# 
+# cat_w_21 = as.CatDynData(x=df_w_21,
+#                            step="week",
+#                            fleet.name="Polyvalent-W-2021",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2021-01-01"),
+#                                           as.Date("2021-12-28")))
 cat_w_22 = as.CatDynData(x=df_w_22,
                            step="week",
                            fleet.name="Polyvalent-W-2022",
@@ -446,135 +434,135 @@ cat_w_22 = as.CatDynData(x=df_w_22,
 
 ###############
 
-cat_s_12 = as.CatDynData(x=df_s_12,
-                           step="week",
-                           fleet.name="Polyvalent-S-2012",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2012-01-01"),
-                                          as.Date("2012-12-23")))
-
-cat_s_13 = as.CatDynData(x=df_s_13,
-                           step="week",
-                           fleet.name="Polyvalent-S-2013",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2013-01-01"),
-                                          as.Date("2013-12-25")))
-
-cat_s_14 = as.CatDynData(x=df_s_14,
-                           step="week",
-                           fleet.name="Polyvalent-S-2014",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2014-01-01"),
-                                          as.Date("2014-12-25")))
-
-cat_s_15 = as.CatDynData(x=df_s_15,
-                           step="week",
-                           fleet.name="Polyvalent-S-2015",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2015-01-01"),
-                                          as.Date("2015-12-27")))
-
-cat_s_16 = as.CatDynData(x=df_s_16,
-                           step="week",
-                           fleet.name="Polyvalent-S-2016",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2016-01-01"),
-                                          as.Date("2016-12-25")))
-
-cat_s_17 = as.CatDynData(x=df_s_17,
-                           step="week",
-                           fleet.name="Polyvalent-S-2017",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2017-01-01"),
-                                          as.Date("2017-12-24")))
-
-cat_s_18 = as.CatDynData(x=df_s_18,
-                           step="week",
-                           fleet.name="Polyvalent-S-2018",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2018-01-01"),
-                                          as.Date("2018-12-28")))
-
-cat_s_19 = as.CatDynData(x=df_s_19,
-                           step="week",
-                           fleet.name="Polyvalent-S-2019",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2019-01-01"),
-                                          as.Date("2019-12-28")))
-
-cat_s_20 = as.CatDynData(x=df_s_20 %>% filter(semana != 53),
-                           step="week",
-                           fleet.name="Polyvalent-S-2020",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2020-01-01"),
-                                          as.Date("2020-12-27")))
-
-cat_s_21 = as.CatDynData(x=df_s_21,
-                           step="week",
-                           fleet.name="Polyvalent-S-2021",
-                           coleff=7,
-                           colcat=5,
-                           colmbw=15,
-                           unitseff="trips",
-                           unitscat="kg",
-                           unitsmbw="kg",
-                           nmult="thou",
-                           season.dates=c(as.Date("2021-01-01"),
-                                          as.Date("2021-12-26")))
+# cat_s_12 = as.CatDynData(x=df_s_12,
+#                            step="week",
+#                            fleet.name="Polyvalent-S-2012",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2012-01-01"),
+#                                           as.Date("2012-12-23")))
+# 
+# cat_s_13 = as.CatDynData(x=df_s_13,
+#                            step="week",
+#                            fleet.name="Polyvalent-S-2013",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2013-01-01"),
+#                                           as.Date("2013-12-25")))
+# 
+# cat_s_14 = as.CatDynData(x=df_s_14,
+#                            step="week",
+#                            fleet.name="Polyvalent-S-2014",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2014-01-01"),
+#                                           as.Date("2014-12-25")))
+# 
+# cat_s_15 = as.CatDynData(x=df_s_15,
+#                            step="week",
+#                            fleet.name="Polyvalent-S-2015",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2015-01-01"),
+#                                           as.Date("2015-12-27")))
+# 
+# cat_s_16 = as.CatDynData(x=df_s_16,
+#                            step="week",
+#                            fleet.name="Polyvalent-S-2016",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2016-01-01"),
+#                                           as.Date("2016-12-25")))
+# 
+# cat_s_17 = as.CatDynData(x=df_s_17,
+#                            step="week",
+#                            fleet.name="Polyvalent-S-2017",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2017-01-01"),
+#                                           as.Date("2017-12-24")))
+# 
+# cat_s_18 = as.CatDynData(x=df_s_18,
+#                            step="week",
+#                            fleet.name="Polyvalent-S-2018",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2018-01-01"),
+#                                           as.Date("2018-12-28")))
+# 
+# cat_s_19 = as.CatDynData(x=df_s_19,
+#                            step="week",
+#                            fleet.name="Polyvalent-S-2019",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2019-01-01"),
+#                                           as.Date("2019-12-28")))
+# 
+# cat_s_20 = as.CatDynData(x=df_s_20 %>% filter(semana != 53),
+#                            step="week",
+#                            fleet.name="Polyvalent-S-2020",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2020-01-01"),
+#                                           as.Date("2020-12-27")))
+# 
+# cat_s_21 = as.CatDynData(x=df_s_21,
+#                            step="week",
+#                            fleet.name="Polyvalent-S-2021",
+#                            coleff=7,
+#                            colcat=5,
+#                            colmbw=15,
+#                            unitseff="trips",
+#                            unitscat="kg",
+#                            unitsmbw="kg",
+#                            nmult="thou",
+#                            season.dates=c(as.Date("2021-01-01"),
+#                                           as.Date("2021-12-26")))
 cat_s_22 = as.CatDynData(x=df_s_22,
                            step="week",
                            fleet.name="Polyvalent-S-2022",
@@ -590,6 +578,24 @@ cat_s_22 = as.CatDynData(x=df_s_22,
 
 ```
 
+# teste dos mean weights
+
+```{r}
+contabilidade_s %>%
+  # filter(ANO == 2017) %>% View()
+  ggplot +
+  geom_line(aes(x = semana,
+                y = mean_weight_estim,
+                group = ANO,
+                color = ANO)) +
+  # geom_smooth(aes(x = semana,
+  #                 y =  mean_weight)) +
+  facet_wrap(ANO~.) +
+  labs(title = 'Costa SUL') +
+  theme_bw()
+```
+
+# funcoes para fittar catdyn
 
 ```{r}
 trialer = function(data, p,M, N0.ini, P.ini, k.ini,
@@ -657,12 +663,594 @@ plotador = function(data, model){
 ```
 
 
-## FITS
+## Fit - 2022 W
+
+```{r}
+plot.CatDynData(cat_w_22,
+                mark = T,
+                offset = c(0,1,10),
+                hem = 'N')
+```
+despiste several catch maxima,at week 2, 17 26 or 43, catch spike maxima is 43. 
+
+```{r}
+
+# poisson", "negbin", "normal", "apnormal", "lognormal", "aplnormal", "gamma", "roblognormal", "gumbel"
+
+# Nelder-Mead', 'BFGS', 'CG', 'L-BFGS-B', 'nlm', 'nlminb', 'spg', 'ucminf', 'newuoa', 'bobyqa', 'nmkb', 'hjkb', 'Rcgmin', or 'Rvmmin'
+
+
+
+# negbin, normal, lognormal, gamma
+
+# CG - spg - BFGS - Nelder-Mead
+
+
+
+fit_w_22_1 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'negbin',
+        method = 'CG',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_2 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'negbin',
+        method = 'spg',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_3 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'negbin',
+        method = 'BFGS',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_4 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'negbin',
+        method = 'Nelder-Mead',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_5 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'normal',
+        method = 'CG',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_6 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'normal',
+        method = 'spg',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_7 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'normal',
+        method = 'BFGS',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_8 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'normal',
+        method = 'Nelder-Mead',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_9 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'lognormal',
+        method = 'CG',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_10 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'lognormal',
+        method = 'spg',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_11 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'lognormal',
+        method = 'BFGS',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_12 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'lognormal',
+        method = 'Nelder-Mead',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_13 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'gamma',
+        method = 'CG',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_14 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'gamma',
+        method = 'spg',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_15 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'gamma',
+        method = 'BFGS',
+        itnmax = 100000,
+        disp = 50)
+
+fit_w_22_16 = 
+  trialer(cat_w_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(43),
+        distr = 'gamma',
+        method = 'Nelder-Mead',
+        itnmax = 100000,
+        disp = 50)
+
+
+CatDynSum(x = list(fit_w_22_1$fit,
+                   fit_w_22_2$fit,
+                   fit_w_22_3$fit,
+                   fit_w_22_4$fit,
+                   fit_w_22_5$fit,
+                   fit_w_22_6$fit,
+                   fit_w_22_7$fit,
+                   # fit_w_22_8$fit,
+                   fit_w_22_9$fit,
+                   fit_w_22_10$fit,
+                   # fit_w_22_11$fit,
+                   fit_w_22_12$fit,
+                   fit_w_22_13$fit,
+                   fit_w_22_14$fit,
+                   fit_w_22_15$fit,
+                   fit_w_22_16$fit),
+          season = '2022',
+          method = c('CG','spg','BFGS','Nelder-Mead',
+                     'CG','spg','BFGS',#'Nelder-Mead',
+                     'CG','spg',#'BFGS',
+                     'Nelder-Mead',
+                     'CG','spg','BFGS','Nelder-Mead')) %>% View
+
+
+#fit_w_22
+plotador(cat_w_22, fit_w_22)
+
+
+```
+
+
+
+
+# Fit do sul
+
+```{r}
+plot.CatDynData(cat_s_22,
+                mark = T,
+                offset = c(0,1,10),
+                hem = 'N')
+```
+Spike at week 2 in the series
 
 
 ```{r}
-fit_w_12 = 
-  trialer(cat_w_12,
+fit_s_22_1 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'negbin',
+        method = 'CG',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_2 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'negbin',
+        method = 'spg',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_3 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'negbin',
+        method = 'BFGS',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_4 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'negbin',
+        method = 'Nelder-Mead',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_5 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'normal',
+        method = 'CG',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_6 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'normal',
+        method = 'spg',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_7 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'normal',
+        method = 'BFGS',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_8 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'normal',
+        method = 'Nelder-Mead',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_9 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'lognormal',
+        method = 'CG',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_10 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'lognormal',
+        method = 'spg',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_11 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'lognormal',
+        method = 'BFGS',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_12 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'lognormal',
+        method = 'Nelder-Mead',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_13 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'gamma',
+        method = 'CG',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_14 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'gamma',
+        method = 'spg',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_15 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'gamma',
+        method = 'BFGS',
+        itnmax = 100000,
+        disp = 50)
+
+fit_s_22_16 = 
+  trialer(cat_s_22,
+        p = 1,
+        M = 1/52,
+        N0.ini = 15000,
+        P.ini = list(1000),
+        k.ini = 0.01,
+        alpha.ini = 0.5,
+        beta.ini  = 0.5,
+        P = list(2),
+        distr = 'gamma',
+        method = 'Nelder-Mead',
+        itnmax = 100000,
+        disp = 50)
+
+
+summary_catdyn_s =
+CatDynSum(x = list(fit_s_22_1$fit,
+                   fit_s_22_2$fit,
+                   fit_s_22_3$fit,
+                   fit_s_22_4$fit,
+                   fit_s_22_5$fit,
+                   fit_s_22_6$fit,
+                   fit_s_22_7$fit,
+                   fit_s_22_8$fit,
+                   fit_s_22_9$fit,
+                   fit_s_22_10$fit,
+                   fit_s_22_11$fit,
+                   fit_s_22_12$fit,
+                   fit_s_22_13$fit,
+                   fit_s_22_14$fit,
+                   fit_s_22_15$fit,
+                   fit_s_22_16$fit),
+          season = '2022',
+          method = c('CG','spg','BFGS','Nelder-Mead',
+                     'CG','spg','BFGS','Nelder-Mead',
+                     'CG','spg','BFGS',
+                     'Nelder-Mead',
+                     'CG','spg','BFGS','Nelder-Mead')) 
+
+xtable(summary_catdyn_s) %>% 
+  print(.,
+        type = "latex",
+        file = "tables/res_catdyn_s.tex", 
+        include.rownames = F,
+        only.contents = T)
+
+```
+
+
+```{r}
+fit_w_22 = 
+  trialer(cat_w_22,
         p = 2,
         M = 1/52,
         N0.ini = 10000,
@@ -676,36 +1264,15 @@ fit_w_12 =
         itnmax = 10,
         disp = 50)
 
-fit_w_13 = 
-  trialer(cat_w_13,
-        p = 2,
-        M = 1/52,
-        N0.ini = 10000,
-        P.ini = list(100, 100),
-        k.ini = 0.1,
-        alpha.ini = 0.1,
-        beta.ini  = 0.11,
-        P = list(8,36),
-        distr = 'lognormal',
-        method = 'spg',
-        itnmax = 10,
-        disp = 50)
+plotador(cat_w_22, fit_w_22)
 
-fit_w_14 = 
-  trialer(cat_w_14,
-        p = 2,
-        M = 1/52,
-        N0.ini = 10000,
-        P.ini = list(100, 100),
-        k.ini = 0.1,
-        alpha.ini = 0.1,
-        beta.ini  = 0.11,
-        P = list(8,36),
-        distr = 'lognormal',
-        method = 'spg',
-        itnmax = 10,
-        disp = 50)
+```
 
+
+
+# deprecated
+
+```{r, eval = F}
 
 bw_sum_w = 
 contabilidade_w %>% group_by(ANO) %>% 
@@ -730,34 +1297,6 @@ CatDynBSD(inp_s,
           multi = F,
           mbw.sd = temp,
           method = rep('spg',15))
-
-
-
-
-```
-
-
-```{r}
-fit_w_22 = 
-  trialer(cat_w_22,
-        p = 2,
-        M = 1/52,
-        N0.ini = 10000,
-        P.ini = list(100, 100),
-        k.ini = 0.1,
-        alpha.ini = 0.1,
-        beta.ini  = 0.11,
-        P = list(8,36),
-        distr = 'lognormal',
-        method = 'spg',
-        itnmax = 10,
-        disp = 50)
-
-plotador(cat_w_22, fit_w_22)
-```
-
-
-```{r}
 
 contabilidade_w_m =
 naut_peso2 %>%
