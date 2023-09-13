@@ -635,12 +635,13 @@ trialer = function(data, p,M, N0.ini, P.ini, k.ini,
   return(res)
 }
 
-plotador = function(data, model){
+plotador = function(data, model, pre = T, post1 = T, post2 = T){
+  if(pre){
   plot.CatDynData(data,
                 mark = T,
                 offset = c(0,1,10),
-                hem = 'N')
-  
+                hem = 'N')}
+  if(post1){
   plot(x=model$pre_fit,
      leg.pos="topright",
      Biom.tstep=7,
@@ -648,8 +649,9 @@ plotador = function(data, model){
      Biom.xpos=0.4,
      Biom.ypos=0,
      Cat.xpos=0.4,
-     Cat.ypos=0.1)
-
+     Cat.ypos=0.1)}
+  
+  if(post2){
   plot(x=model$pred,
        leg.pos="topright",
        Biom.tstep=7,
@@ -657,7 +659,7 @@ plotador = function(data, model){
        Biom.xpos=0.18,
        Biom.ypos=0.1,
        Cat.xpos=0.18,
-       Cat.ypos=0.2)
+       Cat.ypos=0.2)}
     
 }
 ```
@@ -671,6 +673,7 @@ plot.CatDynData(cat_w_22,
                 offset = c(0,1,10),
                 hem = 'N')
 ```
+
 despiste several catch maxima,at week 2, 17 26 or 43, catch spike maxima is 43. 
 
 ```{r}
@@ -792,20 +795,20 @@ fit_w_22_7 =
         itnmax = 100000,
         disp = 50)
 
-fit_w_22_8 = 
-  trialer(cat_w_22,
-        p = 1,
-        M = 1/52,
-        N0.ini = 15000,
-        P.ini = list(1000),
-        k.ini = 0.01,
-        alpha.ini = 0.5,
-        beta.ini  = 0.5,
-        P = list(43),
-        distr = 'normal',
-        method = 'Nelder-Mead',
-        itnmax = 100000,
-        disp = 50)
+# fit_w_22_8 = 
+#   trialer(cat_w_22,
+#         p = 1,
+#         M = 1/52,
+#         N0.ini = 15000,
+#         P.ini = list(1000),
+#         k.ini = 0.01,
+#         alpha.ini = 0.5,
+#         beta.ini  = 0.5,
+#         P = list(43),
+#         distr = 'normal',
+#         method = 'Nelder-Mead',
+#         itnmax = 100000,
+#         disp = 50)
 
 fit_w_22_9 = 
   trialer(cat_w_22,
@@ -837,20 +840,20 @@ fit_w_22_10 =
         itnmax = 100000,
         disp = 50)
 
-fit_w_22_11 = 
-  trialer(cat_w_22,
-        p = 1,
-        M = 1/52,
-        N0.ini = 15000,
-        P.ini = list(1000),
-        k.ini = 0.01,
-        alpha.ini = 0.5,
-        beta.ini  = 0.5,
-        P = list(43),
-        distr = 'lognormal',
-        method = 'BFGS',
-        itnmax = 100000,
-        disp = 50)
+# fit_w_22_11 = 
+#   trialer(cat_w_22,
+#         p = 1,
+#         M = 1/52,
+#         N0.ini = 15000,
+#         P.ini = list(1000),
+#         k.ini = 0.01,
+#         alpha.ini = 0.5,
+#         beta.ini  = 0.5,
+#         P = list(43),
+#         distr = 'lognormal',
+#         method = 'BFGS',
+#         itnmax = 100000,
+#         disp = 50)
 
 fit_w_22_12 = 
   trialer(cat_w_22,
@@ -927,7 +930,7 @@ fit_w_22_16 =
         itnmax = 100000,
         disp = 50)
 
-
+summary_catdyn_w =
 CatDynSum(x = list(fit_w_22_1$fit,
                    fit_w_22_2$fit,
                    fit_w_22_3$fit,
@@ -949,7 +952,14 @@ CatDynSum(x = list(fit_w_22_1$fit,
                      'CG','spg','BFGS',#'Nelder-Mead',
                      'CG','spg',#'BFGS',
                      'Nelder-Mead',
-                     'CG','spg','BFGS','Nelder-Mead')) %>% View
+                     'CG','spg','BFGS','Nelder-Mead')) 
+
+xtable(summary_catdyn_w) %>% 
+  print(.,
+        type = "latex",
+        file = "tables/res_catdyn_w.tex", 
+        include.rownames = F,
+        only.contents = T)
 
 
 #fit_w_22
@@ -958,7 +968,45 @@ plotador(cat_w_22, fit_w_22)
 
 ```
 
+## outputs W
 
+```{r}
+png('plots/res_catdyn_w.png', height = 10, width = 10, units = 'in', res = 300)
+plotador(cat_w_22, fit_w_22_1, T, F, F)
+dev.off()
+
+png('plots/res_catdyn_w_cor.png', height = 10, width = 10, units = 'in', res = 300)
+CatDynCor(x = list(fit_w_22_1$fit,
+                   fit_w_22_2$fit,
+                   fit_w_22_3$fit,
+                   fit_w_22_4$fit,
+                   fit_w_22_5$fit,
+                   fit_w_22_6$fit,
+                   fit_w_22_7$fit,
+                   # fit_w_22_8$fit,
+                   fit_w_22_9$fit,
+                   fit_w_22_10$fit,
+                   # fit_w_22_11$fit,
+                   fit_w_22_12$fit,
+                   fit_w_22_13$fit,
+                   fit_w_22_14$fit,
+                   fit_w_22_15$fit,
+                   fit_w_22_16$fit),
+          method = c('CG','spg','BFGS','Nelder-Mead',
+                     'CG','spg','BFGS',#'Nelder-Mead',
+                     'CG','spg',#'BFGS',
+                     'Nelder-Mead',
+                     'CG','spg','BFGS','Nelder-Mead'),
+          ttl = c('1','2','3','4','5','6','7','9','10','12','13','14','15','16'),
+          arr = c(4,4)) 
+dev.off()
+
+png('plots/res_catdyn_w_finalmodel.png', height = 10, width = 10, units = 'in', res = 300)
+plotador(cat_w_22, fit_w_22_3, F, F, T)
+dev.off()
+
+
+```
 
 
 # Fit do sul
@@ -969,8 +1017,8 @@ plot.CatDynData(cat_s_22,
                 offset = c(0,1,10),
                 hem = 'N')
 ```
-Spike at week 2 in the series
 
+Spike at week 2 in the series
 
 ```{r}
 fit_s_22_1 = 
@@ -1247,8 +1295,50 @@ xtable(summary_catdyn_s) %>%
 
 ```
 
+## outputs
 
 ```{r}
+png('plots/res_catdyn_s.png', height = 10, width = 10, units = 'in', res = 300)
+plotador(cat_s_22, fit_s_22_1, T, F, F)
+dev.off()
+
+png('plots/res_catdyn_s_cor.png', height = 10, width = 10, units = 'in', res = 300)
+CatDynCor(x = list(fit_s_22_1$fit,
+                   fit_s_22_2$fit,
+                   fit_s_22_3$fit,
+                   fit_s_22_4$fit,
+                   fit_s_22_5$fit,
+                   fit_s_22_6$fit,
+                   fit_s_22_7$fit,
+                   fit_s_22_8$fit,
+                   fit_s_22_9$fit,
+                   fit_s_22_10$fit,
+                   fit_s_22_11$fit,
+                   fit_s_22_12$fit,
+                   fit_s_22_13$fit,
+                   fit_s_22_14$fit,
+                   fit_s_22_15$fit,
+                   fit_s_22_16$fit),
+          method = c('CG','spg','BFGS','Nelder-Mead',
+                     'CG','spg','BFGS','Nelder-Mead',
+                     'CG','spg','BFGS',
+                     'Nelder-Mead',
+                     'CG','spg','BFGS','Nelder-Mead'),
+          ttl = c('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16'),
+          arr = c(4,4)) 
+dev.off()
+
+png('plots/res_catdyn_s_finalmodel.png', height = 10, width = 10, units = 'in', res = 300)
+plotador(cat_s_22, fit_s_22_4, F, F, T)
+dev.off()
+```
+
+
+
+# deprecated
+
+```{r, eval = F}
+
 fit_w_22 = 
   trialer(cat_w_22,
         p = 2,
@@ -1266,13 +1356,6 @@ fit_w_22 =
 
 plotador(cat_w_22, fit_w_22)
 
-```
-
-
-
-# deprecated
-
-```{r, eval = F}
 
 bw_sum_w = 
 contabilidade_w %>% group_by(ANO) %>% 
