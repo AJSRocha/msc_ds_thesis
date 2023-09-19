@@ -86,6 +86,10 @@ png('plots/res_spict_retro_mis_s_y.png', height = 10, width = 10, units = 'in', 
 plotspict.retro(retro_res)
 dev.off()
 
+png('plots/res_spict_diag_mis_s_y.png', height = 10, width = 10, units = 'in', res = 300)
+plotspict.diagnostic(calc.osa.resid(res_spict))
+dev.off()
+
 b = Sys.time()
 spict_render_mis_s_y = b-a
 ```
