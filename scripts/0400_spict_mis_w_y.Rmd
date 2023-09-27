@@ -71,13 +71,13 @@ save(res_spict_w, file = 'tables/spict_tables_w.Rdata')
 
 
 png('plots/res_spict_data_mis_w_y.png', height = 10, width = 10, units = 'in', res = 300)
-plotspict.data(res_spict)
+plotspict.data(res_spict, qlegend = F)
 dev.off()
 
 png('plots/res_spict_res_mis_w_y.png', height = 10, width = 10, units = 'in', res = 300)
 par(mfrow = c(2,2))
-plotspict.bbmsy(res_spict)
-plotspict.ffmsy(res_spict)
+plotspict.bbmsy(res_spict, qlegend = F)
+plotspict.ffmsy(res_spict, qlegend = F)
 plotspict.fb(res_spict)
 plotspict.production(res_spict, n.plotyears = 40)
 dev.off()
@@ -87,7 +87,7 @@ plotspict.retro(retro_res)
 dev.off()
 
 png('plots/res_spict_diag_mis_w_y.png', height = 10, width = 10, units = 'in', res = 300)
-plotspict.diagnostic(calc.osa.resid(res_spict))
+plotspict.diagnostic(calc.osa.resid(res_spict), qlegend = F)
 dev.off()
 
 b = Sys.time()
